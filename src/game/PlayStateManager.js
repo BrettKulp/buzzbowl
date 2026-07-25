@@ -1,0 +1,243 @@
+import config from "./configLoader.js";
+import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
+import { log, error } from "./logger";
+
+export class PlayStateManager {
+    constructor(game) {
+        this.game = game;
+    }
+
+    startPlay() {
+        if (this.game.playStarted) return;
+
+        deselectAllPlayers(this.game);
+        this.game.playStarted = true;
+        this.game.playPaused = false;
+        this.game.playPausedBeforeSnap = false;
+        this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+        this.game.passAttempted = false;
+
+        this.game.setLOSBarrierSensor(true);
+
+        this.game.startButton.disable();
+        this.game.nextPlayButton.disable();
+        this.game.pauseButton.enable();
+
+        this.forEachPlayer((player) => {
+            if (player && player.makeDynamic) {
+                player.makeDynamic();
+            }
+        });
+    }
+
+    pausePlay(ballCarrierDown) {
+        if (!this.game.playStarted) return;
+
+        this.game.playStarted = false;
+        this.game.playPaused = true;
+
+        this.game.setLOSBarrierSensor(false);
+
+        this.forEachPlayer((player) => {
+            if (player && player.stop) {
+                player.stop();
+            }
+        });
+
+        if (!ballCarrierDown) {
+            this.game.startButton.enable();
+        }
+        this.game.pauseButton.disable();
+    }
+
+    changePossession(keepLOS = false) {
+        log("change possession");
+
+        this.game.possession = this.game.possession === "Home" ? "Away" : "Home";
+        this.game.targetEndzone = this.game.possession === "Home" ? "Right" : "Left";
+        this.game.offenseMovingRight = this.game.targetEndzone === "Right";
+        this.game.down = 1;
+
+        this.resetAllPlayerColors();
+
+        if (keepLOS) {
+            this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+        } else {
+            this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+            const losResetX = this.game.targetEndzone === "Right"
+                ? this.game.canvasWidth * 0.38
+                : this.game.canvasWidth * 0.62;
+            this.game.lineOfScrimmage.x = losResetX;
+            this.game.lineOfScrimmage.marker.updateX(losResetX);
+            this.game.updateLOSBarrier(losResetX);
+        }
+
+        const fdDirection = this.game.targetEndzone === "Right" ? 1 : -1;
+        const fdX = this.game.lineOfScrimmage.x + fdDirection * yardsToPixels(config.field.yardsToFirstDown);
+        this.game.firstDownMarker.x = fdX;
+        this.game.firstDownMarker.marker.updateX(fdX);
+
+        this.game.scoreboard.updateDown(this.game.downLabels[this.game.down]);
+
+        this.forEachPlayer((player) => {
+            if (player && player.resetPosition) {
+                player.resetPosition(this.game);
+            }
+        });
+
+        this.game.checkBallCarrier();
+
+        this.setDefensiveTeamColor();
+
+        this.resetPlayState();
+        this.game.startButton.enable();
+        this.game.nextPlayButton.disable();
+    }
+
+    nextPlay() {
+        if (this.game.scored) {
+            this.changePossession();
+            this.game.restart();
+        }
+
+        if (this.game.turnoverOnDowns) {
+            this.game.turnoverOnDowns = false;
+            this.changePossession(true);
+        }
+
+        this.pausePlay();
+        this.game.hideUIPopups();
+        this.game.playPausedBeforeSnap = true;
+        this.game.playStarted = false;
+        this.game.playPaused = false;
+        this.game.framesAfterScore = 40;
+
+        log(`new lOS: ${this.game.lineOfScrimmage.x}`);
+
+        this.forEachPlayer((player) => {
+            if (player && player.resetPosition) {
+                player.resetPosition(this.game);
+            }
+        });
+
+        this.game.checkBallCarrier();
+
+        this.forEachPlayer((player) => this.game.updateTargetCircle(player));
+
+        this.game.startButton.enable();
+        this.game.nextPlayButton.disable();
+        this.game.playStarted = false;
+    }
+
+    handleTackle(ballCarrier, tackler, type) {
+        this.game.playPausedBeforeSnap = false;
+
+        try {
+            if (ballCarrier) ballCarrier.logPlayer();
+            if (tackler) tackler.logPlayer();
+        } catch {
+            log("tackle was made by sideline/endzone");
+        }
+
+        let tackleX;
+        let tackleY;
+
+        if (ballCarrier) {
+            tackleX = ballCarrier.x.toFixed(2);
+            tackleY = ballCarrier.y.toFixed(2);
+        } else if (type === "Incomplete") {
+            tackleX = this.game.lineOfScrimmage.x;
+        }
+
+        if (type === "Touchdown") {
+            this.handleTouchdown(tackleX);
+        } else {
+            this.handleNonTouchdown(tackleX, type);
+        }
+    }
+
+    handleTouchdown(tackleX) {
+        log("Touchdown of " +
+            (this.game.lineOfScrimmage.x - this.game.lineOfScrimmage.previousX).toFixed(2) + "px");
+
+        this.game.showTouchdownUI();
+        this.game.scored = true;
+
+        if (this.game.possession === "Home") {
+            this.game.homeScore += 7;
+            this.game.scoreboard.updateScore("Home", this.game.homeScore);
+        } else {
+            this.game.awayScore += 7;
+            this.game.scoreboard.updateScore("Away", this.game.awayScore);
+        }
+    }
+
+    handleNonTouchdown(tackleX, type) {
+        if (type !== "Incomplete") {
+            this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+            const losDir = this.game.targetEndzone === "Right" ? 1 : -1;
+            let newLOS = Number(tackleX) + losDir * 30;
+            if (newLOS < 145) newLOS = 145;
+            if (newLOS > 1455) newLOS = 1455;
+
+            this.game.lineOfScrimmage.x = newLOS;
+            this.game.lineOfScrimmage.marker.updateX(newLOS);
+            this.game.updateLOSBarrier(newLOS);
+
+            const reachedFirstDown = this.game.targetEndzone === "Right"
+                ? this.game.lineOfScrimmage.x >= this.game.firstDownMarker.x
+                : this.game.lineOfScrimmage.x <= this.game.firstDownMarker.x;
+
+            if (reachedFirstDown) {
+                const fdX = newLOS + losDir * (yardsToPixels(10) + 30);
+                this.game.firstDownMarker.x = fdX;
+                this.game.firstDownMarker.marker.updateX(fdX);
+                this.game.scoreboard.updateDown(this.game.downLabels[this.game.down]);
+            } else {
+                this.incrementDown();
+            }
+            this.game.showDownUI();
+        } else if (type === "Incomplete") {
+            this.incrementDown();
+        }
+
+        this.game.nextPlayButton.enable();
+        this.pausePlay(true);
+        this.game.playStarted = false;
+    }
+
+    incrementDown() {
+        this.game.down++;
+        if (this.game.down > 4) {
+            this.game.down = 1;
+            this.game.turnoverOnDowns = true;
+        }
+        this.game.scoreboard.updateDown(this.game.downLabels[this.game.down]);
+    }
+
+    forEachPlayer(callback) {
+        getAllPlayers(this.game).forEach(callback);
+    }
+
+    resetAllPlayerColors() {
+        getAllPlayers(this.game).forEach(player => {
+            player.hasBall = false;
+            player.fillColor = player.team === "Home" ? this.game.homeColor : this.game.awayColor;
+            this.game.updateTargetCircle(player);
+        });
+    }
+
+    setDefensiveTeamColor() {
+        const defPlayers = this.game.possession === "Home" ? getAwayPlayers(this.game) : getHomePlayers(this.game);
+        const defTeamColor = this.game.possession === "Home" ? this.game.awayColor : this.game.homeColor;
+        defPlayers.forEach(player => { player.fillColor = defTeamColor; });
+    }
+
+    resetPlayState() {
+        this.game.scored = false;
+        this.game.playStarted = false;
+        this.game.playPaused = false;
+        this.game.playPausedBeforeSnap = true;
+        this.game.framesAfterScore = 40;
+    }
+}

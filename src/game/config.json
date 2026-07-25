@@ -1,0 +1,126 @@
+{
+  "debug": false,
+  "colors": {
+    "home": "#000088",
+    "away": "#000000",
+    "ballCarrier": "#AA5511",
+    "endZone": "#000044",
+    "field": "#006500",
+    "lineOfScrimmage": "#0002EE",
+    "firstDown": "#FFD633",
+    "sideline": "#D3D3D3",
+    "background": "#222222",
+    "uiBackground": "#333333",
+    "button": "#444444",
+    "buttonHover": "#555555",
+    "buttonDisabled": "#888888",
+    "targetCircle": "#FF0000",
+    "rotationHandle": "#000000"
+  },
+  "canvas": {
+    "width": 1600,
+    "height": 900
+  },
+  "layout": {
+    "scoreboardHeight": 100,
+    "controlsHeight": 140,
+    "margin": 5,
+    "endZoneWidth": 130
+  },
+  "field": {
+    "lineOfScrimmageX": 603,
+    "yardsToFirstDown": 10
+  },
+  "players": {
+    "spacing": 48,
+    "qbPassOffset": 175
+  },
+  "physics": {
+    "vibrationStrength": 0.001,
+    "baseForceMagnitude": 0.0004
+  },
+  "veering": {
+    "maxAngle": 0.3141592653589793,
+    "correctionRate": 0.005,
+    "inertiaFactor": 0.97,
+    "maxMomentum": 0.06,
+    "targetFlipChance": 0.015
+  },
+  "formations": {
+    "offense": {
+      "I": {
+        "ballCarrier": "RB",
+        "positions": {
+          "OL_1":  { "homePlayerId": 1,  "awayPlayerId": 12, "xOffset": -40,  "yOffset": 0 },
+          "OL_2":  { "homePlayerId": 2,  "awayPlayerId": 13, "xOffset": -40,  "yOffset": -48 },
+          "OL_3":  { "homePlayerId": 3,  "awayPlayerId": 14, "xOffset": -40,  "yOffset": 48 },
+          "OL_4":  { "homePlayerId": 4,  "awayPlayerId": 15, "xOffset": -40,  "yOffset": -96 },
+          "OL_5":  { "homePlayerId": 5,  "awayPlayerId": 16, "xOffset": -40,  "yOffset": 96 },
+          "WR_1":  { "homePlayerId": 6,  "awayPlayerId": 17, "xOffset": -40,  "yOffset": -240 },
+          "WR_2":  { "homePlayerId": 7,  "awayPlayerId": 18, "xOffset": -40,  "yOffset": 240 },
+          "RB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": -255, "yOffset": 0 },
+          "QB":    { "homePlayerId": 9,  "awayPlayerId": 20, "xOffset": -110, "yOffset": 0 },
+          "TE/FB": { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": -180, "yOffset": 0 },
+          "TE":    { "homePlayerId": 11, "awayPlayerId": 22, "xOffset": -95, "yOffset": 144 }
+        },
+        "backedUp": {
+          "RB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": -502, "yOffset": 50 },
+          "TE/FB": { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": -358, "yOffset": -144 }
+        }
+      },
+      "Gun": {
+        "ballCarrier": "QB",
+        "positions": {
+          "OL_1":  { "homePlayerId": 1,  "awayPlayerId": 12, "xOffset": -40,  "yOffset": 0 },
+          "OL_2":  { "homePlayerId": 2,  "awayPlayerId": 13, "xOffset": -40,  "yOffset": -48 },
+          "OL_3":  { "homePlayerId": 3,  "awayPlayerId": 14, "xOffset": -40,  "yOffset": 48 },
+          "OL_4":  { "homePlayerId": 4,  "awayPlayerId": 15, "xOffset": -40,  "yOffset": -96 },
+          "OL_5":  { "homePlayerId": 5,  "awayPlayerId": 16, "xOffset": -40,  "yOffset": 96 },
+          "WR_1":  { "homePlayerId": 6,  "awayPlayerId": 17, "xOffset": -40,  "yOffset": -240 },
+          "WR_2":  { "homePlayerId": 7,  "awayPlayerId": 18, "xOffset": -40,  "yOffset": 240 },
+          "RB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": -225, "yOffset": 45 },
+          "QB":    { "homePlayerId": 9,  "awayPlayerId": 20, "xOffset": -250, "yOffset": 0 },
+          "TE/FB": { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": -70,  "yOffset": -150 },
+          "TE":    { "homePlayerId": 11, "awayPlayerId": 22, "xOffset": -70,  "yOffset": 144 }
+        },
+        "backedUp": {
+          "RB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": -50,  "yOffset": 50 },
+          "QB":    { "homePlayerId": 9,  "awayPlayerId": 20, "xOffset": -160, "yOffset": 0 },
+          "TE/FB": { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": 130,  "yOffset": -135 }
+        }
+      }
+    },
+    "defense": {
+      "4-3": {
+        "positions": {
+          "RDE":   { "homePlayerId": 1,  "awayPlayerId": 12, "xOffset": 40,  "yOffset": -110 },
+          "NT":    { "homePlayerId": 2,  "awayPlayerId": 13, "xOffset": 35,  "yOffset": -30 },
+          "LDT":   { "homePlayerId": 3,  "awayPlayerId": 14, "xOffset": 35,  "yOffset": 30 },
+          "DE/CB": { "homePlayerId": 4,  "awayPlayerId": 15, "xOffset": 35,  "yOffset": 110 },
+          "ROLB":  { "homePlayerId": 5,  "awayPlayerId": 16, "xOffset": 125,  "yOffset": -60 },
+          "LOLB":  { "homePlayerId": 6,  "awayPlayerId": 17, "xOffset": 125,  "yOffset": 60 },
+          "MLB":   { "homePlayerId": 7,  "awayPlayerId": 18, "xOffset": 135, "yOffset":0 },
+          "CB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": 35,  "yOffset": -240 },
+          "DB_1":  { "homePlayerId": 9,  "awayPlayerId": 20, "xOffset": 35,  "yOffset":240 },
+          "DB_2":  { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": 260, "yOffset":150 },
+          "DB_3":  { "homePlayerId": 11, "awayPlayerId": 22, "xOffset": 260, "yOffset":-150 }
+        }
+      },
+      "Dime": {
+        "positions": {
+          "RDE":   { "homePlayerId": 1,  "awayPlayerId": 12, "xOffset": 40,  "yOffset": -110 },
+          "NT":    { "homePlayerId": 2,  "awayPlayerId": 13, "xOffset": 35,  "yOffset": 0 },
+          "LDT":   { "homePlayerId": 3,  "awayPlayerId": 14, "xOffset": 35,  "yOffset": 110 },
+          "DE/CB": { "homePlayerId": 4,  "awayPlayerId": 15, "xOffset": 100,  "yOffset": 180 },
+          "ROLB":  { "homePlayerId": 5,  "awayPlayerId": 16, "xOffset": 120,  "yOffset": -180 },
+          "LOLB":  { "homePlayerId": 6,  "awayPlayerId": 17, "xOffset": 135,  "yOffset": 60 },
+          "MLB":   { "homePlayerId": 7,  "awayPlayerId": 18, "xOffset": 135, "yOffset":-40 },
+          "CB":    { "homePlayerId": 8,  "awayPlayerId": 19, "xOffset": 35,  "yOffset": -240 },
+          "DB_1":  { "homePlayerId": 9,  "awayPlayerId": 20, "xOffset": 35,  "yOffset":240 },
+          "DB_2":  { "homePlayerId": 10, "awayPlayerId": 21, "xOffset": 260, "yOffset":150 },
+          "DB_3":  { "homePlayerId": 11, "awayPlayerId": 22, "xOffset": 260, "yOffset":-150 }
+        }
+      }
+    }
+  }
+}

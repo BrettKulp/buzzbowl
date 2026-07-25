@@ -1,0 +1,437 @@
+/* App.css - Cleaned and optimized */
+
+/* Base Layout */
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header Styles */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+.logo {
+  height: 6em;
+  padding: 1em;
+  will-change: filter;
+  transition: filter 300ms;
+  border-radius: 5%;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 4em #646cffaa);
+}
+
+.logo-mirrored {
+  transform: scaleX(-1);
+}
+
+.logo-mirrored:hover {
+  filter: drop_shadow(0 0 4em #dc5a09aa);
+}
+
+/* Game Section */
+.game-section {
+  width: 100%;
+  margin: 0 auto 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+#game-container {
+  width: 100%;
+  max-width: min(1600px, calc(100vw - 2rem));
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  background-color: #222222;
+}
+
+#game-container canvas {
+  display: block;
+}
+
+/* Mobile landscape: constrain by height instead of width */
+@media (orientation: landscape) and (max-height: 500px) {
+  .site-header {
+    margin-bottom: 0;
+    padding: 0.25rem 0;
+  }
+
+  .site-header .logo {
+    display: none;
+  }
+
+  h1 {
+    font-size: 1.5em;
+    margin: 0;
+  }
+
+  .tagline,
+  .tagline-desc,
+  .game-section ~ * {
+    display: none;
+  }
+
+  .game-section {
+    margin: 0 auto;
+  }
+
+  #game-container {
+    width: auto;
+    max-width: calc(100vw - 2rem);
+    height: calc(100vh - 40px);
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* Game Controls */
+.game-controls {
+  display: flex;
+  flex-wrap: wrap; /* This is correct for wrapping */
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Keep the button styles from index.css for general appearance */
+/* Ensure play-type-container flex behavior allows it to shrink */
+.play-type-container {
+  /* Existing styles */
+  display: inline-flex; /* or just `flex` */
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #1a1a1a;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #1a1a1a;
+  /* min-width: 80px; Removed min-width to allow it to shrink more */
+  text-align: center;
+  flex-shrink: 1; /* Allow it to shrink */
+  flex-basis: auto; /* Allow it to determine base size from content */
+  /* Ensure it behaves like other flex items in the game-controls flex container */
+}
+
+/* Styles for the "playType" label text */
+.play-type-label {
+  font-size: 0.75em;
+  margin-bottom: 2px;
+}
+
+/* Styles for the div containing arrows and text */
+.play-type-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Styles for the arrow buttons */
+.play-type-arrow {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 5px;
+  font-size: 1em;
+  font-weight: bold;
+  color: #333;
+  flex-shrink: 0; /* Prevent arrows from shrinking */
+}
+
+/* Styles for the text displaying the current play type (Run/Pass) */
+.play-type-text {
+  font-weight: bold;
+  margin: 0 4px;
+  font-size: 0.9em;
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+
+/* Taglines */
+.tagline {
+  font-size: 1.2rem;
+  margin: 0;
+  text-align: center;
+}
+
+.tagline-desc {
+  font-size: 1.2rem;
+  margin: -1rem 1rem;
+  text-align: center;
+}
+
+/* Email Signup */
+.email-signup {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.input-group input,
+.input-group button {
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  transition: border-color 0.25s;
+  text-align: center;
+}
+
+.input-group input {
+  width: 60%;
+  max-width: 300px;
+}
+
+.input-group button {
+  width: 40%;
+  white-space: nowrap;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #646cffaa;
+}
+
+.input-group button:hover {
+  border-color: #646cffaa;
+  cursor: pointer;
+}
+
+.input-group button:active {
+  background-color: #2a2a2a;
+  transform: translateY(1px);
+}
+
+.input-group button:focus,
+.input-group button:focus-visible {
+  outline: none;
+  border-color: #646cffaa;
+}
+
+.submitted-message {
+  text-align: center;
+  color: white;
+  max-width: 600px;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Contact */
+.contact {
+  margin: 0;
+  text-align: center;
+}
+
+.contributing {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.contributing p {
+  margin: 0 0 0.5rem;
+}
+
+.contact-link {
+  color: #646cff;
+  text-decoration: none;
+  transition: color 0.25s;
+}
+
+.contact-link:hover {
+  color: #535bf2;
+}
+
+/* Projects Section */
+.other-work {
+  width: 100%;
+  text-align: center;
+  margin-top: -2rem;
+  margin-bottom: 4rem;
+}
+
+.projects {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: 0;
+  justify-items: center;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.project {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  max-width: 250px;
+  width: 100%;
+}
+
+.ef-logo:hover {
+  filter: drop_shadow(0 0 4em #05b119aa);
+}
+
+.bash-logo:hover {
+  filter: drop_shadow(0 0 4em #ff6464aa);
+}
+
+.discDye-logo:hover {
+  filter: drop_shadow(0 0 4em #524cd3aa);
+}
+
+.project-link {
+  font-size: 0.9em;
+  text-decoration: underline;
+  color: #646cff;
+  transition: color 0.25s;
+}
+
+.project-link:hover {
+  color: #535bf2;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .site-header {
+    margin-bottom: -1rem;
+  }
+
+  .site-header .logo {
+    display: none;
+  }
+
+  .logo {
+    max-width: 150px;
+    height: auto;
+  }
+
+  h1 {
+    font-size: 2.5em;
+  }
+
+  .input-group {
+    width: 100%;
+  }
+
+  .input-group input,
+  .input-group button {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  /* Removed the game-controls button width: 100% here */
+  /* .game-controls button {
+       width: 100%;
+       max-width: 250px;
+       margin-left: 0 !important;
+       margin-top: 5px;
+    } */
+
+  .projects {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  /* Adjusted styles for game controls to allow wrapping */
+   .game-controls {
+    align-items: flex-start; /* Optional: Align items to the left when wrapping */
+    justify-content: center; /* Keep centered horizontally if space allows */
+    /* Ensure default button margin is not causing issues - add margin-top for spacing */
+  }
+
+  /* Add some vertical spacing between wrapped items */
+  .game-controls > * { /* Target direct children of game-controls */
+    margin-top: 5px; /* Add margin after each item */
+    margin-bottom: 5px;
+  }
+
+  /* Adjust button sizing for smaller screens to allow wrapping */
+  .game-controls button {
+      /* Remove width: 100% */
+      width: auto; /* Let width be determined by content/padding */
+      max-width: none; /* Remove max-width constraint from mobile */
+      flex-shrink: 1; /* Allow general buttons to shrink */
+      flex-grow: 0; /* Prevent them from growing */
+  }
+
+  /* Ensure the play type container also behaves well */
+  .play-type-container {
+     /* Removed height: 48px so it adjusts to content. Also removed min-width. */
+     width: auto; /* Let width be determined by content */
+     flex-shrink: 0; /* Prevent it from shrinking too much */
+     flex-grow: 0; /* Prevent it from growing unexpectedly */
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  .tagline,
+  .tagline-desc {
+    font-size: 1rem;
+  }
+
+  .input-group input,
+  .input-group button {
+    max-width: 250px;
+  }
+}
