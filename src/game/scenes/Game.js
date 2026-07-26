@@ -1,5 +1,4 @@
 import { Scene } from "phaser";
-import { EventBus } from "../EventBus";
 import { Player } from "../Player";
 import { Button } from "../Button";
 import { EndZone } from "../EndZone";
@@ -12,9 +11,9 @@ import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectA
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
 
-export class Game extends Scene {
+export class StandardGame extends Scene {
     constructor() {
-        super("Game");
+        super("StandardGame");
         this.home = null;
         this.away = null;
         this.vibrationStrength = config.physics.vibrationStrength;
@@ -128,7 +127,6 @@ export class Game extends Scene {
         this.changeformation();
         this.changeformation();
         
-        EventBus.emit("current-scene-ready", this);
     }
     
     createField() {
@@ -693,10 +691,6 @@ export class Game extends Scene {
         });
         
         this.events.on("shutdown", () => {
-            EventBus.off("startPlay", this.startPlay, this);
-            EventBus.off("pausePlay", this.pausePlay, this);
-            EventBus.off("nextPlay", this.nextPlay, this);
-            EventBus.off("changePlayType", this.changePlayType, this);
             this.input.off("dragstart");
             this.input.off("drag");
             this.input.off("dragend");
@@ -727,8 +721,23 @@ export class Game extends Scene {
             .onClick(() => this.changeformation());
 
         // chane formation button
+        if (config.debug) {
             new Button(this, this.canvasWidth - 200, 20, "Change Possession", { width: 400, height: 60, labelStyle: arrowStyle })
             .onClick(() => this.changePossession());
+        }
+
+        // menu buttin TODO make it a settings button
+
+            new Button(this, this.canvasWidth - 200, 50, "Menu", { width: 100, height: 60, labelStyle: arrowStyle })
+            .onClick(() => {
+                this.pausePlay();
+                this.scene.sleep("StandardGame");
+                if (this.scene.isSleeping("MainMenu")) {
+                    this.scene.wake("MainMenu");
+                } else {
+                    this.scene.launch("MainMenu");
+                }
+            });
         
         // Play type controls
         new Button(this, 280, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
