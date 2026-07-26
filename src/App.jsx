@@ -131,7 +131,7 @@ function App() {
         )}
 
         <div className="contact">
-          <a href="https://discord.gg/TddDrSpJ" className="contact-link">
+          <a href="https://discord.gg/xen4wNYMGt" className="contact-link">
             Join the Discord
           </a>
           <p></p>
