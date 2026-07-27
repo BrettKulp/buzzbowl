@@ -97,7 +97,6 @@ export class PlayStateManager {
     nextPlay() {
         if (this.game.scored) {
             this.changePossession();
-            this.game.restart();
         }
 
         if (this.game.turnoverOnDowns) {

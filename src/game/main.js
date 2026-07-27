@@ -1,4 +1,5 @@
-import { StandardGame } from './scenes/Game';
+import { StandardGameScene } from './scenes/StandardGameScene';
+import { FreePlayScene } from './scenes/FreePlayScene';
 import { MainMenu } from "./scenes/MainMenu";
 import { AUTO, Game } from 'phaser';
 
@@ -9,7 +10,7 @@ const config = {
     width: 1600,
     height: 900,
     parent: 'game-container',
-    backgroundColor: '#028af8',
+    backgroundColor: '#333333',
     resolution: Math.min(window.devicePixelRatio || 1, 1.5),
     antialias: true, // Keep anti-aliasing for smooth shapes/lines
     // pixelArt: true, // Keep commented out
@@ -34,7 +35,8 @@ const config = {
     },
     scene: [
         MainMenu,
-        StandardGame,
+        FreePlayScene,
+        StandardGameScene,
     ],
     audio: false,
 };
