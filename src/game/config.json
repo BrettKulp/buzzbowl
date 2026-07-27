@@ -33,7 +33,8 @@
   },
   "players": {
     "spacing": 48,
-    "qbPassOffset": 175
+    "qbPassOffset": 175,
+    "canReceivePass": ["WR_1", "WR_2", "RB", "TE/FB", "TE"]
   },
   "physics": {
     "vibrationStrength": 0.001,
