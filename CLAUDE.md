@@ -6,10 +6,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` — Vite dev server. The only way to exercise the game; verification is manual in the browser.
+- `npm run dev` — Vite dev server.
 - `npm run lint` — must pass before a PR (CONTRIBUTING.md).
-- No test framework or `test` script exists.
+- `npm test` — Vitest, unit + headless-scene integration. `npm run test:watch` to iterate.
+- `npm run test:e2e` — Playwright smoke tests. Starts its own dev server on port 5273; run
+  `npx playwright install chromium` once first.
 - Branch prefixes are required: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`.
+
+## Tests
+
+Three layers, in `tests/`:
+
+- `tests/unit/` — the football rules, in plain Node. `PlayStateManager` and `FormationManager`
+  import no Phaser, so they run against `tests/fakes/makeFakeGame.js` rather than a real scene.
+  `config.test.js` guards the `config.json` invariants that `createPlayers()` assumes.
+- `tests/integration/` — boots a real `StandardGameScene` in `Phaser.HEADLESS` under jsdom.
+  `tests/setup-headless.js` shims the two things jsdom lacks: a 2D canvas context (Phaser measures
+  every `add.text()` through one) and image `onload` (Phaser gates its main loop on the
+  TextureManager finishing base64 textures, so without the shim the game boots and never runs).
+- `tests/e2e/` — Playwright. The game is all canvas, so these assert on console errors and on
+  screenshots changing between scenes, not on DOM.
+
+Scene code, input handlers and the wrapper UI classes are covered only through layers 2–3. When
+adding a test, prefer one that fails for a reason a reviewer cares about over one that restates the
+implementation — see the rejected-tests list in the suite's own comments.
 
 ## Pitfalls
 

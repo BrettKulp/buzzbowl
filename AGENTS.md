@@ -1,6 +1,8 @@
 # Agents
 
-- Do not run `npm run build` or any build commands. The user will handle building and testing manually.
+- Do not run `npm run build` or any build commands. The user will handle building manually.
+- Do run the tests: `npm test` and, when the change could affect the running game, `npm run test:e2e`. Both are expected to pass before a PR.
+- When adding a feature, fixing a bug, or making another notable change, add an entry to `CHANGELOG.md` under `[Unreleased]` (Keep a Changelog format: `### Added` / `### Changed` / `### Fixed` / `### Removed` as applicable).
 - Use descriptive variable names. Never use numbered suffixes like `infoBtn1`, `infoBtn2`. Instead use names that describe what the variable represents, e.g. `standardGameInfoButton`, `freePlayInfoButton`.
 
 ## Architecture

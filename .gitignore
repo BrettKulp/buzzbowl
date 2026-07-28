@@ -26,6 +26,10 @@ dist-ssr
 # Playwright MCP test artifacts
 .playwright-mcp/
 
+# Test output
+test-results/
+playwright-report/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
