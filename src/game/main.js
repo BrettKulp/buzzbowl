@@ -15,7 +15,6 @@ const config = {
     roundPixels: false, // Keep false for smooth movement and rotation
     input: {
         mouse: { preventDefaultWheel: false }, // let wheel events fall through to page scroll (mouse.capture is not a real Phaser config key, this is the flag that actually gates wheel preventDefault)
-        touch: { capture: false }, // same for touchmove
     },
     physics: {
         default: 'matter',
