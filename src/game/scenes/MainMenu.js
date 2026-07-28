@@ -38,10 +38,6 @@ export class MainMenu extends Scene {
         this.add.text(this.canvasWidth / 2, 200, "footbal simulation game", { fontSize: "32px", fill: "#fff", fontStyle: "bold" }).setOrigin(0.5);
     }
 
-    update(time, delta) {
-
-    }
-
     switchScene(name) {
         this.scene.sleep();
         if (this.scene.isSleeping(name)) {

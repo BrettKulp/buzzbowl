@@ -87,7 +87,7 @@ export class Player extends Phaser.GameObjects.Rectangle {
             try {
                 this.scene.matter.body.setStatic(this.body, false);
             } catch (e) {
-                // ignore
+                error("Error making player dynamic:", e);
             }
         }
     }

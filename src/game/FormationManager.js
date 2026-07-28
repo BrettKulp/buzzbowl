@@ -1,5 +1,5 @@
 import config from "./configLoader.js";
-import { log, error } from "./logger";
+import { error } from "./logger";
 import { deselectAllPlayers, getHomePlayers, getAwayPlayers } from "./helpers";
 
 export class FormationManager {

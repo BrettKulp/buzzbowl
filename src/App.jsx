@@ -25,27 +25,18 @@ function App() {
 
   const minGameWidth = 1024;
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [screenTooSmall, setScreenTooSmall] = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < minGameWidth
+  );
 
+  useEffect(() => {
     const handleResize = () => {
       setScreenTooSmall(window.innerWidth < minGameWidth);
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Fix the screenTooSmall state initialization
-  const [screenTooSmall, setScreenTooSmall] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < minGameWidth;  // Fixed from window.length
-    } else {
-      return false;
-    }
-  });
-
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
@@ -72,7 +63,7 @@ function App() {
       } else {
        // console.log('no email')
       }
-    } catch {
+    } catch (error) {
       console.error('Error adding email', error)
     }
   }
@@ -99,8 +90,13 @@ function App() {
       <br/>
       <p className="tagline-desc mt-5">The orange player is the ball carrier. To pass tap or click a skill postiton player 
       with a red dot when the play type is set to pass. You can also pause the play then complete the pass while the paly is paused. All passes have a 70% chance of completion
-      You can click on a player and drag the red circle to rotate thier position before the play or while the play is paused. Tap or click a player then use the yellow arrows to rotate the player's direction before a play or while the play is paused.
+      You can click on a player and drag the red circle to rotate thier position before the play or while the play is paused. Tap or click a player then use the yellow arrows to rotate the player&apos;s direction before a play or while the play is paused.
       After a touchdown the game will reset</p>
+      {screenTooSmall && (
+        <p className="screen-warning">
+          This game works best on a screen at least 1024px wide. Controls may be hard to use at this size.
+        </p>
+      )}
     <div className="game-section" >
       <PhaserGame ref={phaserRef} />
     </div>

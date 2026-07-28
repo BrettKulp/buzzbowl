@@ -1,6 +1,6 @@
 import config from "./configLoader.js";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
-import { log, error } from "./logger";
+import { log } from "./logger";
 
 export class PlayStateManager {
     constructor(game) {
@@ -139,23 +139,21 @@ export class PlayStateManager {
         }
 
         let tackleX;
-        let tackleY;
 
         if (ballCarrier) {
             tackleX = ballCarrier.x.toFixed(2);
-            tackleY = ballCarrier.y.toFixed(2);
         } else if (type === "Incomplete") {
             tackleX = this.game.lineOfScrimmage.x;
         }
 
         if (type === "Touchdown") {
-            this.handleTouchdown(tackleX);
+            this.handleTouchdown();
         } else {
             this.handleNonTouchdown(tackleX, type);
         }
     }
 
-    handleTouchdown(tackleX) {
+    handleTouchdown() {
         log("Touchdown of " +
             (this.game.lineOfScrimmage.x - this.game.lineOfScrimmage.previousX).toFixed(2) + "px");
 

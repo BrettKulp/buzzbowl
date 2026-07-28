@@ -1,5 +1,4 @@
 import { Button } from "../Button";
-import config from "../configLoader.js";
 import { BaseGameScene } from "./BaseGameScene";
 
 export class FreePlayScene extends BaseGameScene {

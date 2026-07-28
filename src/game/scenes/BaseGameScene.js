@@ -434,8 +434,6 @@ export class BaseGameScene extends Scene {
                     gameObject.offensivePosition !== "QB" &&
                     (this.playStarted || this.playPaused) && gameObject.teamHasPossession(this) && !this.scramble) {
 
-                    const position = gameObject.offensivePosition;
-
                     let offensivePlayers;
 
                     if (this.possession === "Home") {
@@ -605,19 +603,15 @@ export class BaseGameScene extends Scene {
                     break;
                 }
 
-                try {
-                    if (otherPlayer.entityType === 'EndZone' &&
-                        ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
-                         (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
-                        log("touchdown in collission detectin with right endzone");
-                        this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
-                        this.nextPlayButton.enable();
-                        this.pausePlay(true);
-                        this.playStarted = false;
-                        break;
-                    }
-                } catch (e) {
-                    // console.log(e)
+                if (otherPlayer?.entityType === 'EndZone' &&
+                    ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
+                     (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
+                    log("touchdown in collission detectin with right endzone");
+                    this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
+                    this.nextPlayButton.enable();
+                    this.pausePlay(true);
+                    this.playStarted = false;
+                    break;
                 }
 
                 if (
@@ -871,7 +865,7 @@ export class BaseGameScene extends Scene {
         this.updateMode(time, delta);
     }
 
-    updateMode(time, delta) {
+    updateMode(_time, _delta) {
         // Override in subclass for mode-specific update logic
     }
 
@@ -975,7 +969,7 @@ export class BaseGameScene extends Scene {
         this.playStateManager.handleTackle(ballCarrier, tackler, type);
     }
 
-    incrementDown(type) {
+    incrementDown() {
         this.playStateManager.incrementDown();
     }
 }
