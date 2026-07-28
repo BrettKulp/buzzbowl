@@ -1,10 +1,9 @@
 import { BaseGameScene } from "./BaseGameScene";
 import config from "../configLoader.js";
-
+import { yardsToPixels } from "../helpers";
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
-
         this.quarter = 1;
         this.quarterLength = 120; // seconds 
         this.gameClock = this.quarterLength;
@@ -79,19 +78,63 @@ export class StandardGameScene extends BaseGameScene {
         if (this.quarter === 2) {
             this.halftime = true;
             this.quarter = 3;
-            this.changePossession();
+            this.swapTeamDirection({
+                team: "Away",
+                direction: false,
+                startLOS: this.canvasWidth - this.lineOfScrimmage.x
+            });
+            this.down = 1;
+            this.scoreboard.updateDown(this.downLabels[this.down]);
+            this.playStateManager.resetAllPlayerColors();
+            this.playStateManager.setDefensiveTeamColor();
+            this.playStateManager.resetPlayState();
+            this.playStateManager.forEachPlayer((player) => {
+                if (player && player.resetPosition) {
+                    player.resetPosition(this);
+                }
+            });
+            this.checkBallCarrier();
+            this.startButton.enable();
+            this.nextPlayButton.disable();
         } else if (this.quarter === 4) {
             this.gameOver();
             return;
         } else {
             this.quarter++;
+            this.swapTeamDirection();
+            this.formationManager.toggleOffensiveFormation();
+            this.formationManager.toggleDefensiveFormation();
         }
 
         this.gameClock = this.quarterLength;
         this.quarterText.setText(`Q${this.quarter}`);
         this.clockText.setText(this.formatTime(this.gameClock));
     }
+  
+    swapTeamDirection({ team, direction, startLOS } = {}) {
+        if (team) {
+            this.possession = team;
+        }
 
+        if (direction !== undefined) {
+            this.offenseMovingRight = direction;
+        } else {
+            this.offenseMovingRight = !this.offenseMovingRight;
+        }
+        this.targetEndzone = this.offenseMovingRight ? "Right" : "Left";
+
+        if (startLOS !== undefined) {
+            this.lineOfScrimmage.x = startLOS;
+        } else {
+            this.lineOfScrimmage.x = this.canvasWidth - this.lineOfScrimmage.x;
+        }
+        this.lineOfScrimmage.marker.updateX(this.lineOfScrimmage.x);
+        this.updateLOSBarrier(this.lineOfScrimmage.x);
+
+        const dirMult = this.offenseMovingRight ? 1 : -1;
+        this.firstDownMarker.x = this.lineOfScrimmage.x + dirMult * yardsToPixels(config.field.yardsToFirstDown);
+        this.firstDownMarker.marker.updateX(this.firstDownMarker.x);
+    }
     gameOver() {
         // TODO: show final score / game over screen
         this.quarterText.setText("FINAL");
