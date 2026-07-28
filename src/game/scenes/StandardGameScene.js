@@ -1,13 +1,11 @@
 import { BaseGameScene } from "./BaseGameScene";
 import config from "../configLoader.js";
 import { yardsToPixels } from "../helpers";
-
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
-
         this.quarter = 1;
-        this.quarterLength = 5; // seconds 
+        this.quarterLength = 120; // seconds 
         this.gameClock = this.quarterLength;
         this.clockRunning = false;
         this.halftime = false;
@@ -112,7 +110,7 @@ export class StandardGameScene extends BaseGameScene {
         this.quarterText.setText(`Q${this.quarter}`);
         this.clockText.setText(this.formatTime(this.gameClock));
     }
-
+  
     swapTeamDirection({ team, direction, startLOS } = {}) {
         if (team) {
             this.possession = team;
@@ -137,7 +135,6 @@ export class StandardGameScene extends BaseGameScene {
         this.firstDownMarker.x = this.lineOfScrimmage.x + dirMult * yardsToPixels(config.field.yardsToFirstDown);
         this.firstDownMarker.marker.updateX(this.firstDownMarker.x);
     }
-
     gameOver() {
         // TODO: show final score / game over screen
         this.quarterText.setText("FINAL");
