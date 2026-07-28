@@ -93,7 +93,7 @@ export class PlayStateManager {
         this.game.startButton.enable();
         this.game.nextPlayButton.disable();
     }
-
+    
     nextPlay() {
         if (this.game.scored) {
             this.changePossession();
