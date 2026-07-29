@@ -5,7 +5,7 @@ export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
         this.quarter = 1;
-        this.quarterLength = 120; // seconds 
+        this.quarterLength = 10; // seconds 
         this.gameClock = this.quarterLength;
         this.clockRunning = false;
         this.halftime = false;

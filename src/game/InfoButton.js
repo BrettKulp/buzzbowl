@@ -3,7 +3,6 @@ import { Button } from './Button.js';
 export class InfoButton extends Button {
     constructor(scene, parentButton, tooltipText, options = {}) {
         const parentWidth = parentButton.rect.width;
-        const parentHeight = parentButton.rect.height;
 
         const defaultX = parentButton.rect.x + parentWidth / 2 + 40;
         const defaultY = parentButton.rect.y;

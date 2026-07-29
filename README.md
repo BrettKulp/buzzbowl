@@ -43,13 +43,30 @@ Interested in contributing? Please read our [Contributing Guide](CONTRIBUTING.md
 
 4. Open your browser to the URL shown in the terminal (usually `http://localhost:5173`)
 
+## Tests
+
+```bash
+npm test          # unit + headless scene tests (Vitest)
+npm run test:e2e  # browser smoke tests (Playwright)
+```
+
+`npm run test:e2e` needs a browser once: `npx playwright install chromium`. It starts its own dev
+server, so you don't need `npm run dev` running.
+
+The suite has three layers: unit tests for the game rules, a headless Phaser boot that checks the
+scene actually assembles, and Playwright smoke tests that click through the menus in a real browser.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for what belongs in each.
+
 ## Project Structure
 
-The main game logic lives in `src/game/scenes/Game.js`, which is the primary scene that runs the game.
+The shared game logic lives in `src/game/scenes/BaseGameScene.js`. The two playable modes,
+`FreePlayScene` and `StandardGameScene`, extend it.
 
 ### Key Files
 
-- `src/game/scenes/Game.js` - Main game scene
+- `src/game/scenes/BaseGameScene.js` - Shared game scene (field, players, input, update loop)
+- `src/game/scenes/StandardGameScene.js` - Standard mode (quarters and a game clock)
+- `src/game/scenes/FreePlayScene.js` - Free play mode (manual possession, no clock)
 - `src/game/FormationManager.js` - Manages offensive/defensive formations
 - `src/game/PlayStateManager.js` - Handles play state (start, pause, tackle, etc.)
 - `src/game/Player.js` - Player entity with physics and movement

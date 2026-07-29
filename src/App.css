@@ -61,6 +61,15 @@
   filter: drop_shadow(0 0 4em #dc5a09aa);
 }
 
+.screen-warning {
+  color: #ffd633;
+  background-color: #333300;
+  border: 1px solid #ffd633;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  max-width: 600px;
+}
+
 /* Game Section */
 .game-section {
   width: 100%;

@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'playwright-report', 'test-results'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -29,10 +29,16 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      'no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
     },
+  },
+  {
+    // Test files and the Playwright config run in Node, not the browser.
+    files: ['tests/**/*.js', 'playwright.config.js'],
+    languageOptions: { globals: globals.node },
   },
 ]

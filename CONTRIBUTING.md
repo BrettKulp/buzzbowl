@@ -26,13 +26,25 @@ Please create a descriptive branch with one of these prefixes:
 2. Create a branch: `git checkout -b feature/your-feature-name`
 3. Make your changes
 4. Run the linter: `npm run lint`
-5. Commit your changes with a clear message
-6. Push to your fork and open a pull request
+5. Run the tests: `npm test` (and `npm run test:e2e` if you changed anything the running game
+   touches — it needs `npx playwright install chromium` the first time)
+6. Commit your changes with a clear message
+7. Push to your fork and open a pull request
 
 ## Code Style
 
 - Follow the existing code style in the project
 - Keep the linter happy (`npm run lint`)
+
+## Tests
+
+Tests live in `tests/`: `unit/` for the game rules (plain Node, no Phaser), `integration/` for a
+headless scene boot, `e2e/` for Playwright smoke tests against the real game.
+
+Aim for tests that would fail for a reason a reviewer cares about. A test that mirrors the
+implementation line for line fails whenever the code is edited rather than when it breaks, so
+things like one-line getters, ternary toggles and `Math.min`/`Math.max` helpers are deliberately
+left untested.
 
 ## License
 
