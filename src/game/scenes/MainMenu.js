@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import { Button } from "../Button";
 import config from "../configLoader.js";
 import { InfoButton } from "../InfoButton";
+import { hasSave } from "../saveGame";
 
 export class MainMenu extends Scene {
 
@@ -21,9 +22,14 @@ export class MainMenu extends Scene {
     create() {
         this.cameras.main.setBackgroundColor(config.colors.uiBackground);
 
+        if (hasSave("StandardGame")) {
+            new Button(this, this.canvasWidth / 2, (this.canvasHeight / 2) - (2 * this.buttonHeight), "Resume Game", { width: 500, height: this.buttonHeight, fontSize: 50 })
+                .onClick(() => this.switchScene("StandardGame", true));
+        }
+
         const standardGameButton = new Button(this, this.canvasWidth / 2,this.canvasHeight / 2 , "Standard Game", { width: 500, height: this.buttonHeight, fontSize: 50 })
             .onClick(() => this.switchScene("StandardGame"));
-        
+
         const standardGameInfoButton = new InfoButton(this, standardGameButton, "2 minute quarters. You set both teams formations");
         standardGameInfoButton.onClick(() => standardGameInfoButton.toggleTooltip());
 
@@ -38,12 +44,12 @@ export class MainMenu extends Scene {
         this.add.text(this.canvasWidth / 2, 200, "footbal simulation game", { fontSize: "32px", fill: "#fff", fontStyle: "bold" }).setOrigin(0.5);
     }
 
-    switchScene(name) {
+    switchScene(name, resume = false) {
         this.scene.sleep();
         if (this.scene.isSleeping(name)) {
             this.scene.wake(name);
         } else {
-            this.scene.launch(name);
+            this.scene.launch(name, { resume });
         }
     }
 }

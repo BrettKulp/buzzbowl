@@ -1,6 +1,7 @@
 import { BaseGameScene } from "./BaseGameScene";
 import config from "../configLoader.js";
 import { yardsToPixels } from "../helpers";
+import { clearSave } from "../saveGame";
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
@@ -138,5 +139,6 @@ export class StandardGameScene extends BaseGameScene {
     gameOver() {
         // TODO: show final score / game over screen
         this.quarterText.setText("FINAL");
+        clearSave(this);
     }
 }

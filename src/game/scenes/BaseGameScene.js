@@ -10,6 +10,7 @@ import { log, error } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
+import { saveGame, loadGame } from "../saveGame";
 
 export class BaseGameScene extends Scene {
     constructor(key) {
@@ -88,6 +89,10 @@ export class BaseGameScene extends Scene {
 
         this.formationManager = null;
         this.playStateManager = null;
+    }
+
+    init(data) {
+        if (data?.resume) loadGame(this);
     }
 
     preload() {
@@ -268,7 +273,7 @@ export class BaseGameScene extends Scene {
 
         this.firstDownMarker.marker = new FieldMarker(
             this,
-            this.lineOfScrimmage.x + yardsToPixels(config.field.yardsToFirstDown),
+            this.firstDownMarker.x,
             this.startY,
             this.fieldHeight,
             c.firstDown
@@ -935,14 +940,17 @@ export class BaseGameScene extends Scene {
 
     changeformation() {
         this.formationManager.toggleOffensiveFormation();
+        saveGame(this);
     }
 
     changeDefensiveFormation() {
         this.formationManager.toggleDefensiveFormation();
+        saveGame(this);
     }
 
     changePlayType() {
         this.formationManager.togglePlayType();
+        saveGame(this);
     }
 
     checkBallCarrier() {
@@ -951,6 +959,7 @@ export class BaseGameScene extends Scene {
 
     changePossession(keepLOS = false) {
         this.playStateManager.changePossession(keepLOS);
+        saveGame(this);
     }
 
     startPlay() {
@@ -963,6 +972,7 @@ export class BaseGameScene extends Scene {
 
     nextPlay() {
         this.playStateManager.nextPlay();
+        saveGame(this);
     }
 
     handleTackle(ballCarrier, tackler, type) {
