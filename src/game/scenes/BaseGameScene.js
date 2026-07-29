@@ -6,7 +6,7 @@ import { Popup } from "../Popup";
 import { Scoreboard } from "../Scoreboard";
 import { FieldMarker } from "../FieldMarker";
 import config from "../configLoader.js";
-import { log } from "../logger";
+import { log, error } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
@@ -605,7 +605,7 @@ export class BaseGameScene extends Scene {
 
                 if (otherPlayer?.entityType === 'EndZone' &&
                     ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
-                     (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
+                        (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
                     log("touchdown in collission detectin with right endzone");
                     this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
                     this.nextPlayButton.enable();

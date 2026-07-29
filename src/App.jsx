@@ -23,21 +23,6 @@ function App() {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
   };
 
-  const minGameWidth = 1024;
-
-  const [screenTooSmall, setScreenTooSmall] = useState(() =>
-    typeof window !== 'undefined' && window.innerWidth < minGameWidth
-  );
-
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenTooSmall(window.innerWidth < minGameWidth);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -92,11 +77,6 @@ function App() {
       with a red dot when the play type is set to pass. You can also pause the play then complete the pass while the paly is paused. All passes have a 70% chance of completion
       You can click on a player and drag the red circle to rotate thier position before the play or while the play is paused. Tap or click a player then use the yellow arrows to rotate the player&apos;s direction before a play or while the play is paused.
       After a touchdown the game will reset</p>
-      {screenTooSmall && (
-        <p className="screen-warning">
-          This game works best on a screen at least 1024px wide. Controls may be hard to use at this size.
-        </p>
-      )}
     <div className="game-section" >
       <PhaserGame ref={phaserRef} />
     </div>
