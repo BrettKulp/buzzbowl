@@ -12,6 +12,8 @@ A Football Simulation Game built with Phaser 3, React, and Vite.
 
 **Play it now:** <a href="https://buzzbowl.org/" target="_blank" rel="noopener noreferrer">buzzbowl.org</a>
 
+**Test in-progress features:** <a href="https://brettkulp.github.io/buzzbowl/" target="_blank" rel="noopener noreferrer">brettkulp.github.io/buzzbowl</a>
+
 **Join the Discord:** <a href="https://discord.gg/xen4wNYMGt" target="_blank" rel="noopener noreferrer">buzz-bowl channel</a>
 
 ## Contributing
