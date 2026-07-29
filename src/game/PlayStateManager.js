@@ -60,10 +60,9 @@ export class PlayStateManager {
 
         this.resetAllPlayerColors();
 
-        if (keepLOS) {
-            this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
-        } else {
-            this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+        this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+
+        if (!keepLOS) {
             const losResetX = this.game.targetEndzone === "Right"
                 ? this.game.canvasWidth * 0.38
                 : this.game.canvasWidth * 0.62;

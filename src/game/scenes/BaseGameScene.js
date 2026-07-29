@@ -6,7 +6,7 @@ import { Popup } from "../Popup";
 import { Scoreboard } from "../Scoreboard";
 import { FieldMarker } from "../FieldMarker";
 import config from "../configLoader.js";
-import { log, error } from "../logger";
+import { log } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
@@ -17,7 +17,6 @@ export class BaseGameScene extends Scene {
         this.home = null;
         this.away = null;
         this.vibrationStrength = config.physics.vibrationStrength;
-        this.possession = "Home";
 
         this.awayColor = config.colors.away;
         this.homeColor = config.colors.home;
@@ -813,7 +812,7 @@ export class BaseGameScene extends Scene {
 
         if (this.scored && this.framesAfterScore > 0) {
             this.framesAfterScore--;
-            if (Number(this.framesAfterScore) < 1) {
+            if (this.framesAfterScore < 1) {
                 this.pausePlay();
             }
             return;
