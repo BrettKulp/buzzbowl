@@ -1,5 +1,5 @@
 // App.jsx
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import logo from './assets/logo.webp'
 import discDye from './assets/discdye.webp'
 import running from './assets/running.png'

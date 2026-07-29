@@ -4,15 +4,18 @@ import { yardsToPixels } from "../helpers";
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
+        this.quarterLength = 120; // seconds
+        this.clockText = null;
+        this.quarterText = null;
+    }
+
+    init() {
+        super.init();
         this.quarter = 1;
-        this.quarterLength = 10; // seconds 
         this.gameClock = this.quarterLength;
         this.clockRunning = false;
         this.halftime = false;
         this.endQuarterAfterPlay = false;
-
-        this.clockText = null;
-        this.quarterText = null;
     }
 
     createModeUI() {
@@ -102,8 +105,11 @@ export class StandardGameScene extends BaseGameScene {
         } else {
             this.quarter++;
             this.swapTeamDirection();
-            this.formationManager.toggleOffensiveFormation();
-            this.formationManager.toggleDefensiveFormation();
+            this.playStateManager.forEachPlayer((player) => {
+                if (player && player.resetPosition) {
+                    player.resetPosition(this);
+                }
+            });
         }
 
         this.gameClock = this.quarterLength;

@@ -135,7 +135,6 @@ export class Player extends Phaser.GameObjects.Rectangle {
                 targetY = this.origY + posConfig.yOffset;
             }
             
-            if (!this.teea)
             this.setPosition(targetX, targetY);
             this.initialX = targetX;
             this.initialY = targetY;
