@@ -59,27 +59,23 @@ afterEach(() => {
 
 describe('menu navigation', () => {
     // MainMenu.switchScene and BaseGameScene.returnToMenu both used to sleep/wake scenes
-    // instead of starting them, so a scene that had been visited once never ran create()
-    // again -- every later visit silently woke the same stale instance, regardless of which
-    // button the user actually clicked. This proves create() now fires fresh on every visit,
-    // including after bouncing through Free Play in between, matching the reported repro.
-    //
-    // This only covers the scene-lifecycle half of the bug. Per-game fields like
-    // down/homeScore/quarter are still only reset in the constructor on this branch, which
-    // Phaser never re-runs -- moving that reset into init() is a separate, already-open
-    // change (see PR #10) that this PR depends on for the full user-visible fix to land.
-    it('re-creates Standard Game every time it is opened via the menu, even after a Free Play round trip', async () => {
+    // instead of starting them, so a scene that had been visited once never re-ran init()
+    // again -- every later visit silently replayed whatever state was left in memory,
+    // regardless of which button the user actually clicked. This reproduces the exact
+    // report: play a Standard Game, back out through the menu into Free Play (which
+    // resets), then start Standard Game again and confirm it's a new game, not the old one.
+    it('starts a fresh Standard Game after a Free Play round trip, even if Standard Game was played before', async () => {
         const mainMenu = game.scene.getScene('MainMenu');
         const standardGame = game.scene.getScene('StandardGame');
         const freePlay = game.scene.getScene('FreePlay');
 
-        let createCount = 0;
-        standardGame.events.on('create', () => { createCount++; });
-
         let created = waitForCreate(standardGame);
         mainMenu.switchScene('StandardGame');
         await created;
-        expect(createCount).toBe(1);
+
+        standardGame.down = 3;
+        standardGame.homeScore = 14;
+        standardGame.quarter = 2;
 
         created = waitForCreate(mainMenu);
         standardGame.returnToMenu();
@@ -97,15 +93,43 @@ describe('menu navigation', () => {
         mainMenu.switchScene('StandardGame');
         await created;
 
-        expect(createCount).toBe(2);
+        expect(standardGame.down).toBe(1);
+        expect(standardGame.homeScore).toBe(0);
+        expect(standardGame.quarter).toBe(1);
+    });
+
+    // The minimal case: the sleep/wake bug never actually needed Free Play in the middle --
+    // any second visit to a scene that had been slept once would replay its old state. This
+    // isolates that from the multi-scene round trip above.
+    it('starts a fresh Standard Game the second time it is opened via the menu, with no other scene visited in between', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        let created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        standardGame.down = 3;
+        standardGame.homeScore = 14;
+        standardGame.quarter = 2;
+
+        created = waitForCreate(mainMenu);
+        standardGame.returnToMenu();
+        await created;
+
+        created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        expect(standardGame.down).toBe(1);
+        expect(standardGame.homeScore).toBe(0);
+        expect(standardGame.quarter).toBe(1);
     });
 
     // The fix replaced sleep/wake with scene.start() everywhere, so it's just as easy to
     // imagine a regression that goes too far the other way -- always starting fresh and
     // never honoring `resume`. This is the other half of the contract: clicking "Resume
-    // Game" must still load the saved game. Unlike the reset case above, this one doesn't
-    // depend on PR #10: loadGame() assigns the saved fields directly, regardless of whether
-    // init() reset them to defaults first.
+    // Game" must still load the saved game, not reset it.
     it('honors an explicit Resume, loading the saved game instead of starting fresh', async () => {
         const mainMenu = game.scene.getScene('MainMenu');
         const standardGame = game.scene.getScene('StandardGame');
