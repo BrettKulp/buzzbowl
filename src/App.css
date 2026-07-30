@@ -130,8 +130,11 @@
 }
 
 #game-container {
-  width: 100%;
-  max-width: min(1600px, calc(100vw - 2rem));
+  /* Bounded by whichever is tighter: available width, or the width a 16:9 box would need to
+     fit the remaining viewport height (header + notice + how-to-play + margins ~230px, plus
+     breathing room below). Without the height term, a short/wide browser window lets the
+     width-derived height push the game below the fold. */
+  width: min(1600px, calc(100vw - 2rem), calc((100dvh - 260px) * 16 / 9));
   aspect-ratio: 16 / 9;
   margin: 0 auto;
   position: relative;

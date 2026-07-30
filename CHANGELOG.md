@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ~500ms poll, and that poll rides the game's render loop, which browsers throttle in a
   background tab — a game booted while its tab wasn't visible could lock in a stale canvas size
   with nothing left to correct it.
+- `#game-container` only capped its size by viewport *width*, deriving height from a fixed 16:9
+  `aspect-ratio`. On a wide-but-short browser window that height overran the fold with nothing
+  to shrink it. Its width now also factors in the remaining viewport height, so it never grows
+  past what actually fits above the fold.
 
 ## [0.1.0] - 2026-07-28
 
