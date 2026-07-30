@@ -77,6 +77,7 @@ describe('first downs', () => {
             targetEndzone: 'Right',
             lineOfScrimmage: losAt(600),
             firstDownMarker: { x: 700, marker: { updateX: () => {} } },
+            down: 3,
         });
 
         // Tackle at 690 spots the ball at 720, past the 700 marker.

@@ -54,7 +54,7 @@ export class PlayStateManager {
         log("change possession");
 
         this.game.possession = this.game.possession === "Home" ? "Away" : "Home";
-        this.game.targetEndzone = this.game.possession === "Home" ? "Right" : "Left";
+        this.game.targetEndzone = this.game.targetEndzone === "Right" ? "Left" : "Right";
         this.game.offenseMovingRight = this.game.targetEndzone === "Right";
         this.game.down = 1;
 
@@ -189,6 +189,7 @@ export class PlayStateManager {
                 const fdX = newLOS + losDir * (yardsToPixels(10) + 30);
                 this.game.firstDownMarker.x = fdX;
                 this.game.firstDownMarker.marker.updateX(fdX);
+                this.game.down = 1;
                 this.game.scoreboard.updateDown(this.game.downLabels[this.game.down]);
             } else {
                 this.incrementDown();

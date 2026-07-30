@@ -5,10 +5,12 @@ export class Popup {
             height = 75,
             bgColor = 0x000000,
             buttonColor = 0x5555bb,
+            hoverColor = 0x6666dd,
             fontSize = '30px'
         } = options;
 
         this.scene = scene;
+        this.buttonColor = buttonColor;
 
         this.bgRect = scene.add.rectangle(x, y - height / 2 - 5, width, height, bgColor);
         this.bgRect.setVisible(false);
@@ -19,6 +21,9 @@ export class Popup {
 
         this.button = scene.add.rectangle(x, y + height / 2 + 5, width, height, buttonColor);
         this.button.setVisible(false);
+        this.button.setInteractive({ useHandCursor: true });
+        this.button.on('pointerover', () => this.button.setFillStyle(hoverColor));
+        this.button.on('pointerout', () => this.button.setFillStyle(this.buttonColor));
 
         this.buttonText = scene.add.text(x, y + height / 2 + 5, 'Next Play', { fontSize, fill: '#fff' })
             .setOrigin(0.5)
@@ -29,10 +34,8 @@ export class Popup {
         this.bgRect.setVisible(true);
         this.labelText.setVisible(true);
         this.button.setVisible(true);
-        this.button.setInteractive({ useHandCursor: true });
-        this.button.setFillStyle(0x5555bb);
-        this.button.on('pointerover', () => this.button.setFillStyle(0x5555bb));
-        this.button.on('pointerout', () => this.button.setFillStyle(0x4444aa));
+        this.button.setInteractive();
+        this.button.setFillStyle(this.buttonColor);
         this.buttonText.setVisible(true);
     }
 
