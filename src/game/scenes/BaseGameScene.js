@@ -659,15 +659,7 @@ export class BaseGameScene extends Scene {
 
         // Menu button
         new Button(this, this.canvasWidth - 100, 40, "Menu", { width: 100, height: 60, labelStyle: arrowStyle })
-            .onClick(() => {
-                this.pausePlay();
-                this.scene.sleep(this.scene.key);
-                if (this.scene.isSleeping("MainMenu")) {
-                    this.scene.wake("MainMenu");
-                } else {
-                    this.scene.launch("MainMenu");
-                }
-            });
+            .onClick(() => this.returnToMenu());
 
         // Play type controls
         new Button(this, 280, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
@@ -937,6 +929,11 @@ export class BaseGameScene extends Scene {
 
     restart() {
         this.scene.restart();
+    }
+
+    returnToMenu() {
+        this.pausePlay();
+        this.scene.start("MainMenu");
     }
 
     // --- Delegated methods ---
