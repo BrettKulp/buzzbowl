@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   once you'd visited Standard Game or Free Play once, every later visit silently replayed
   whatever state was left in memory — most visibly, starting a new Standard Game after
   bouncing through Free Play would resume the old game instead of starting fresh.
+- The save now updates immediately after every tackle, not just on formation/possession/
+  Next Play changes — refreshing while the "Down!"/"Touchdown" popup is showing no longer
+  loses that play's result.
+- Defensive formation positions are now clamped to the canvas the same way offense already
+  was. Near either goal line — most reliably right after a change of possession pins the line
+  of scrimmage deep — defenders (especially deep safeties) could be placed hundreds of pixels
+  off-canvas.
 
 ## [0.1.0] - 2026-07-28
 

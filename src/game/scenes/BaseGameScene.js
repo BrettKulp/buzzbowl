@@ -977,6 +977,7 @@ export class BaseGameScene extends Scene {
 
     handleTackle(ballCarrier, tackler, type) {
         this.playStateManager.handleTackle(ballCarrier, tackler, type);
+        saveGame(this);
     }
 
     incrementDown() {

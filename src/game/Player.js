@@ -122,10 +122,6 @@ export class Player extends Phaser.GameObjects.Rectangle {
 
                 targetX = losX + posConfig.xOffset * dirMult;
                 targetY = this.origY + posConfig.yOffset;
-
-                const fieldLeftBound = game.margin + 5;
-                const fieldRightBound = game.margin + game.fieldWidth - 5;
-                targetX = Math.max(fieldLeftBound, Math.min(fieldRightBound, targetX));
             } else {
                 const dirMult = game.targetEndzone === "Right" ? 1 : -1;
                 const formationConfig = gameConfig.formations.defense[game.defensiveFormation];
@@ -134,6 +130,13 @@ export class Player extends Phaser.GameObjects.Rectangle {
                 targetX = losX + posConfig.xOffset * dirMult;
                 targetY = this.origY + posConfig.yOffset;
             }
+
+            // Formation offsets are tuned for mid-field; near either goal line (e.g. right after
+            // a change of possession pins the LOS deep) they can push a player past the canvas
+            // edge entirely. Offense already had this clamp; defense needs it just as much.
+            const fieldLeftBound = game.margin + 5;
+            const fieldRightBound = game.margin + game.fieldWidth - 5;
+            targetX = Math.max(fieldLeftBound, Math.min(fieldRightBound, targetX));
             
             this.setPosition(targetX, targetY);
             this.initialX = targetX;
