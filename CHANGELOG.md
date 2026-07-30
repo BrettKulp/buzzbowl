@@ -23,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of two large flanking logos, the long "how to play" instructions collapse into a native
   `<details>` disclosure above the game, and the footer's contact/contributing links are a
   single condensed row.
+- Added a small gap between the header's bottom accent stripe and the text below it.
+
+### Fixed
+
+- `PhaserGame` now forces a scale recheck (`game.scale.refresh()`) when the tab becomes visible.
+  Phaser's `Scale.FIT` mode only recalculates on a window resize/orientation event or its own
+  ~500ms poll, and that poll rides the game's render loop, which browsers throttle in a
+  background tab — a game booted while its tab wasn't visible could lock in a stale canvas size
+  with nothing left to correct it.
 
 ## [0.1.0] - 2026-07-28
 
