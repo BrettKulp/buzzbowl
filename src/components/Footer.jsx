@@ -1,25 +1,20 @@
 // Footer.jsx
 function Footer() {
   return (
-    <>
-      <div className="contact">
+    <footer className="site-footer">
+      <nav className="site-footer__links" aria-label="Contact and community">
         <a href="https://discord.gg/xen4wNYMGt" className="contact-link">
-          Join the Discord
+          Discord
         </a>
-        <p></p>
         <a href="mailto:topcitysoftware@gmail.com" className="contact-link">
-          Contact Me
+          Contact
         </a>
-        <p>BK Software LLC</p>
-      </div>
-
-      <div className="contributing">
-        <p>Interested in contributing? Check out the project on GitHub!</p>
-        <a href="https://github.com/BrettKulp/buzzbowl" target="_blank" className="contact-link">
-          GitHub Repository
+        <a href="https://github.com/BrettKulp/buzzbowl" target="_blank" rel="noreferrer" className="contact-link">
+          Contribute on GitHub
         </a>
-      </div>
-    </>
+      </nav>
+      <p className="site-footer__credit">BK Software LLC</p>
+    </footer>
   )
 }
 

@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The "My Other Work & Partners" section only renders when the app is served from
   `buzzbowl.org`/`www.buzzbowl.org`, so forks and local dev builds don't show Brett Kulp's
   partner links.
+- Reworked the header and footer with a subtle retro theme (warm palette, an "Alfa Slab One"
+  wordmark, a gradient accent stripe) and tightened their spacing so the game menu is visible
+  without scrolling on a typical viewport. The header is now a compact badge + wordmark instead
+  of two large flanking logos, the long "how to play" instructions collapse into a native
+  `<details>` disclosure above the game, and the footer's contact/contributing links are a
+  single condensed row.
 
 ## [0.1.0] - 2026-07-28
 
