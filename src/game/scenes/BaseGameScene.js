@@ -10,6 +10,7 @@ import { log } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
+import { saveGame, loadGame } from "../saveGame";
 
 export class BaseGameScene extends Scene {
     constructor(key) {
@@ -61,7 +62,7 @@ export class BaseGameScene extends Scene {
 
     // Re-runs on every scene.start()/scene.restart() call, unlike the constructor —
     // this is where per-game state that mutates during play must be reset.
-    init() {
+    init(data) {
         this.home = null;
         this.away = null;
 
@@ -93,6 +94,8 @@ export class BaseGameScene extends Scene {
         this.down = 1;
         this.homeScore = 0;
         this.awayScore = 0;
+
+        if (data?.resume) loadGame(this);
     }
 
     preload() {
@@ -269,7 +272,7 @@ export class BaseGameScene extends Scene {
 
         this.firstDownMarker.marker = new FieldMarker(
             this,
-            this.lineOfScrimmage.x + yardsToPixels(config.field.yardsToFirstDown),
+            this.firstDownMarker.x,
             this.startY,
             this.fieldHeight,
             c.firstDown
@@ -940,14 +943,17 @@ export class BaseGameScene extends Scene {
 
     changeformation() {
         this.formationManager.toggleOffensiveFormation();
+        saveGame(this);
     }
 
     changeDefensiveFormation() {
         this.formationManager.toggleDefensiveFormation();
+        saveGame(this);
     }
 
     changePlayType() {
         this.formationManager.togglePlayType();
+        saveGame(this);
     }
 
     checkBallCarrier() {
@@ -956,6 +962,7 @@ export class BaseGameScene extends Scene {
 
     changePossession(keepLOS = false) {
         this.playStateManager.changePossession(keepLOS);
+        saveGame(this);
     }
 
     startPlay() {
@@ -968,6 +975,7 @@ export class BaseGameScene extends Scene {
 
     nextPlay() {
         this.playStateManager.nextPlay();
+        saveGame(this);
     }
 
     handleTackle(ballCarrier, tackler, type) {
