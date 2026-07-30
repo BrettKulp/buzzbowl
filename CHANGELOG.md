@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   was. Near either goal line — most reliably right after a change of possession pins the line
   of scrimmage deep — defenders (especially deep safeties) could be placed hundreds of pixels
   off-canvas.
+- The in-game "Restart" button now actually starts a fresh game after a game was entered via
+  "Resume Game". `scene.restart()` with no argument keeps whatever data the scene was
+  originally started with, so a resumed game kept replaying the same save every time Restart
+  was clicked, making the button look like it did nothing.
 
 ## [0.1.0] - 2026-07-28
 

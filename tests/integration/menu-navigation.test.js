@@ -155,4 +155,41 @@ describe('menu navigation', () => {
         expect(standardGame.homeScore).toBe(14);
         expect(standardGame.quarter).toBe(2);
     });
+
+    // scene.restart() with no argument keeps whatever data the scene was originally started
+    // with (Phaser's own doc: "If no value is given it will not overwrite any previous data
+    // that may exist"). A scene entered via Resume was started with {resume: true}, so an
+    // unparented restart() silently replayed the same save every time -- the in-game Restart
+    // button looked like it did nothing.
+    it('starts fresh when Restart is clicked after Resume, instead of reloading the same save', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        let created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        standardGame.down = 3;
+        standardGame.homeScore = 14;
+        standardGame.quarter = 2;
+        saveGame(standardGame);
+
+        created = waitForCreate(mainMenu);
+        standardGame.returnToMenu();
+        await created;
+
+        created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame', true); // "Resume Game"
+        await created;
+
+        expect(standardGame.down).toBe(3); // sanity check: resume actually loaded the save
+
+        created = waitForCreate(standardGame);
+        standardGame.restart();
+        await created;
+
+        expect(standardGame.down).toBe(1);
+        expect(standardGame.homeScore).toBe(0);
+        expect(standardGame.quarter).toBe(1);
+    });
 });

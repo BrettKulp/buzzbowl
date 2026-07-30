@@ -928,7 +928,12 @@ export class BaseGameScene extends Scene {
     }
 
     restart() {
-        this.scene.restart();
+        // scene.restart() with no argument keeps whatever data the scene was originally
+        // started with (Phaser: "If no value is given it will not overwrite any previous data
+        // that may exist"). If this scene was entered via Resume, that's still {resume: true} --
+        // so restart would silently reload the old save instead of starting fresh. Pass an
+        // empty object to clear it.
+        this.scene.restart({});
     }
 
     returnToMenu() {
