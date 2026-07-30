@@ -45,11 +45,6 @@ export class MainMenu extends Scene {
     }
 
     switchScene(name, resume = false) {
-        this.scene.sleep();
-        if (this.scene.isSleeping(name)) {
-            this.scene.wake(name);
-        } else {
-            this.scene.launch(name, { resume });
-        }
+        this.scene.start(name, { resume });
     }
 }

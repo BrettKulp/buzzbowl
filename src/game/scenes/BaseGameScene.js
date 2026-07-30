@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { Player } from "../Player";
+import { Player, PLAYER_WIDTH } from "../Player";
 import { Button } from "../Button";
 import { EndZone } from "../EndZone";
 import { Popup } from "../Popup";
@@ -243,14 +243,30 @@ export class BaseGameScene extends Scene {
         this.matter.add.gameObject(bottomBarrier, { isStatic: true, isSensor: false });
         this.fieldBarriers.push(bottomBarrier);
 
-        new EndZone(this, 79, this.fieldY + this.fieldHeight / 2, 130, this.fieldHeight + 30, {
-            stroke: true,
-            name: "LeftEndZone"
-        });
-        new EndZone(this, 1519, this.fieldY + this.fieldHeight / 2, 130, this.fieldHeight + 30, {
-            stroke: true,
-            name: "RightEndZone"
-        });
+        // Touchdown fires on body overlap, which starts as soon as the ball carrier's
+        // leading edge (half their width ahead of center) touches the sensor. Pulling the
+        // sensor's goal-line edge back by that same half-width means overlap doesn't begin
+        // until the carrier's center actually reaches the goal line -- matching how the LOS
+        // and tackle position elsewhere are always the carrier's raw x (see issue #8).
+        const endZoneSensorWidth = 130;
+        const halfPlayerWidth = PLAYER_WIDTH / 2;
+        const leftGoalLineX = this.margin + endZoneWidth;
+        const rightGoalLineX = this.margin + endZoneWidth + playableFieldWidth;
+
+        new EndZone(
+            this,
+            leftGoalLineX - halfPlayerWidth - endZoneSensorWidth / 2,
+            this.fieldY + this.fieldHeight / 2,
+            endZoneSensorWidth, this.fieldHeight + 30,
+            { stroke: true, name: "LeftEndZone" }
+        );
+        new EndZone(
+            this,
+            rightGoalLineX + halfPlayerWidth + endZoneSensorWidth / 2,
+            this.fieldY + this.fieldHeight / 2,
+            endZoneSensorWidth, this.fieldHeight + 30,
+            { stroke: true, name: "RightEndZone" }
+        );
 
         this.lineOfScrimmage.marker = new FieldMarker(
             this,
@@ -659,15 +675,7 @@ export class BaseGameScene extends Scene {
 
         // Menu button
         new Button(this, this.canvasWidth - 100, 40, "Menu", { width: 100, height: 60, labelStyle: arrowStyle })
-            .onClick(() => {
-                this.pausePlay();
-                this.scene.sleep(this.scene.key);
-                if (this.scene.isSleeping("MainMenu")) {
-                    this.scene.wake("MainMenu");
-                } else {
-                    this.scene.launch("MainMenu");
-                }
-            });
+            .onClick(() => this.returnToMenu());
 
         // Play type controls
         new Button(this, 280, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
@@ -937,6 +945,11 @@ export class BaseGameScene extends Scene {
 
     restart() {
         this.scene.restart();
+    }
+
+    returnToMenu() {
+        this.pausePlay();
+        this.scene.start("MainMenu");
     }
 
     // --- Delegated methods ---
