@@ -814,7 +814,7 @@ export class BaseGameScene extends Scene {
 
         if (this.scored && this.framesAfterScore > 0) {
             this.framesAfterScore--;
-            if (Number(this.framesAfterScore) < 1) {
+            if (this.framesAfterScore < 1) {
                 this.pausePlay();
             }
             return;
