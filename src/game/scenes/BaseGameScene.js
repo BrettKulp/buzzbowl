@@ -6,7 +6,7 @@ import { Popup } from "../Popup";
 import { Scoreboard } from "../Scoreboard";
 import { FieldMarker } from "../FieldMarker";
 import config from "../configLoader.js";
-import { log, error } from "../logger";
+import { log } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
@@ -15,10 +15,7 @@ import { saveGame, loadGame } from "../saveGame";
 export class BaseGameScene extends Scene {
     constructor(key) {
         super(key);
-        this.home = null;
-        this.away = null;
         this.vibrationStrength = config.physics.vibrationStrength;
-        this.possession = "Home";
 
         this.awayColor = config.colors.away;
         this.homeColor = config.colors.home;
@@ -35,6 +32,39 @@ export class BaseGameScene extends Scene {
 
         this.fieldY = this.scoreboardHeight + this.margin;
         this.centerY = this.fieldY + this.fieldHeight / 2;
+        this.startY = this.centerY;
+        this.QBPassOffset = config.players.qbPassOffset;
+
+        this.startButton = null;
+        this.pauseButton = null;
+        this.nextPlayButton = null;
+        this.resetButton = null;
+        this.playTypeButtons = null;
+        this.playTypeText = "Run";
+        this.defensiveFormationText = "4-3";
+        this.formationText = null;
+
+        this.maxVeerAngle = config.veering.maxAngle;
+        this.veerCorrectionRate = config.veering.correctionRate;
+        this.veerInertiaFactor = config.veering.inertiaFactor;
+        this.maxVeerMomentum = config.veering.maxMomentum;
+        this.veerTargetFlipChance = config.veering.targetFlipChance;
+
+        this.downLabels = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
+        this.scramble = false;
+
+        this.draggedPlayer = null;
+        this.draggingRotationHandle = null;
+
+        this.formationManager = null;
+        this.playStateManager = null;
+    }
+
+    // Re-runs on every scene.start()/scene.restart() call, unlike the constructor —
+    // this is where per-game state that mutates during play must be reset.
+    init(data) {
+        this.home = null;
+        this.away = null;
 
         this.lineOfScrimmage = {
             x: config.field.lineOfScrimmageX,
@@ -51,24 +81,7 @@ export class BaseGameScene extends Scene {
         this.framesAfterScore = 40;
         this.playType = "Run";
         this.defensiveFormation = "4-3";
-        this.startY = this.centerY;
-        this.QBPassOffset = config.players.qbPassOffset;
-
-        this.startButton = null;
-        this.pauseButton = null;
-        this.nextPlayButton = null;
-        this.resetButton = null;
-        this.playTypeButtons = null;
-        this.playTypeText = "Run";
-        this.defensiveFormationText = "4-3";
         this.formation = "I";
-        this.formationText = null;
-
-        this.maxVeerAngle = config.veering.maxAngle;
-        this.veerCorrectionRate = config.veering.correctionRate;
-        this.veerInertiaFactor = config.veering.inertiaFactor;
-        this.maxVeerMomentum = config.veering.maxMomentum;
-        this.veerTargetFlipChance = config.veering.targetFlipChance;
 
         this.playStarted = false;
         this.playPaused = false;
@@ -79,19 +92,9 @@ export class BaseGameScene extends Scene {
         this.targetEndzone = "Right";
         this.possession = "Home";
         this.down = 1;
-        this.downLabels = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
-        this.scramble = false;
         this.homeScore = 0;
         this.awayScore = 0;
 
-        this.draggedPlayer = null;
-        this.draggingRotationHandle = null;
-
-        this.formationManager = null;
-        this.playStateManager = null;
-    }
-
-    init(data) {
         if (data?.resume) loadGame(this);
     }
 
@@ -109,10 +112,6 @@ export class BaseGameScene extends Scene {
         this.createUI();
         this.createModeUI();
         this.downLabel = "Down";
-
-        this.playStarted = false;
-        this.playPaused = false;
-        this.playPausedBeforeSnap = true;
 
         this.changePlayType();
         this.changePlayType();
@@ -818,7 +817,7 @@ export class BaseGameScene extends Scene {
 
         if (this.scored && this.framesAfterScore > 0) {
             this.framesAfterScore--;
-            if (Number(this.framesAfterScore) < 1) {
+            if (this.framesAfterScore < 1) {
                 this.pausePlay();
             }
             return;
@@ -934,6 +933,10 @@ export class BaseGameScene extends Scene {
                 if (barrier.body) barrier.body.isSensor = isSensor;
             });
         }
+    }
+
+    restart() {
+        this.scene.restart();
     }
 
     // --- Delegated methods ---
