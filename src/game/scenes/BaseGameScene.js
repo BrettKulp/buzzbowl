@@ -354,7 +354,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: offConfig.ballCarrier === data.offensePosition,
+                hasBall: this.possession === "Home" && offConfig.ballCarrier === data.offensePosition,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,
@@ -373,7 +373,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: false,
+                hasBall: this.possession === "Away" && offConfig.ballCarrier === data.offensePosition,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,
@@ -617,6 +617,12 @@ export class BaseGameScene extends Scene {
                 } else {
                     continue;
                 }
+
+                const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
+                console.debug(
+                    `[DEBUG:collision] collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
+                    `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
+                );
 
                 if (otherPlayer?.entityType === 'SideLine') {
                     this.handleTackle(ballCarrier, otherPlayer, "SideLine");
