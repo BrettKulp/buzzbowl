@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { Player, PLAYER_WIDTH } from "../Player";
+import { Player } from "../Player";
 import { Button } from "../Button";
 import { EndZone } from "../EndZone";
 import { Popup } from "../Popup";
@@ -243,26 +243,26 @@ export class BaseGameScene extends Scene {
         this.matter.add.gameObject(bottomBarrier, { isStatic: true, isSensor: false });
         this.fieldBarriers.push(bottomBarrier);
 
-        // Touchdown fires on body overlap, which starts as soon as the ball carrier's
-        // leading edge (half their width ahead of center) touches the sensor. Pulling the
-        // sensor's goal-line edge back by that same half-width means overlap doesn't begin
-        // until the carrier's center actually reaches the goal line -- matching how the LOS
-        // and tackle position elsewhere are always the carrier's raw x (see issue #8).
+        // Touchdown fires on body overlap, so it fires as soon as any part of the ball
+        // carrier crosses the goal line -- not when their center reaches it. Sensors sit
+        // with their goal-line edge exactly on the goal line, computed the same way for both
+        // ends so neither is offset relative to the other (the old hardcoded positions, 79
+        // and 1519, weren't: the left one sat 9px past its goal line, the right one only 1px
+        // off -- see issue #8).
         const endZoneSensorWidth = 130;
-        const halfPlayerWidth = PLAYER_WIDTH / 2;
-        const leftGoalLineX = this.margin + endZoneWidth;
-        const rightGoalLineX = this.margin + endZoneWidth + playableFieldWidth;
+        this.leftGoalLineX = this.margin + endZoneWidth;
+        this.rightGoalLineX = this.margin + endZoneWidth + playableFieldWidth;
 
         new EndZone(
             this,
-            leftGoalLineX - halfPlayerWidth - endZoneSensorWidth / 2,
+            this.leftGoalLineX - endZoneSensorWidth / 2,
             this.fieldY + this.fieldHeight / 2,
             endZoneSensorWidth, this.fieldHeight + 30,
             { stroke: true, name: "LeftEndZone" }
         );
         new EndZone(
             this,
-            rightGoalLineX + halfPlayerWidth + endZoneSensorWidth / 2,
+            this.rightGoalLineX + endZoneSensorWidth / 2,
             this.fieldY + this.fieldHeight / 2,
             endZoneSensorWidth, this.fieldHeight + 30,
             { stroke: true, name: "RightEndZone" }
@@ -838,13 +838,11 @@ export class BaseGameScene extends Scene {
         }
 
         if (ballCarrier) {
-            const rightEndZoneLeft = 1454;
-            const leftEndZoneRight = 144;
-            if (this.targetEndzone === "Right" && ballCarrier.x > rightEndZoneLeft) {
+            if (this.targetEndzone === "Right" && ballCarrier.x > this.rightGoalLineX) {
                 this.handleTackle(ballCarrier, null, "Touchdown");
                 this.showTouchdownUI();
                 this.scored = true;
-            } else if (this.targetEndzone === "Left" && ballCarrier.x < leftEndZoneRight) {
+            } else if (this.targetEndzone === "Left" && ballCarrier.x < this.leftGoalLineX) {
                 this.handleTackle(ballCarrier, null, "Touchdown");
                 this.showTouchdownUI();
                 this.scored = true;
