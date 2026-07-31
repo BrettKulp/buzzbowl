@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Game" button appears on the main menu whenever a save exists; starting a fresh Standard Game
   or Free Play, or finishing all four quarters, leaves no stale save behind.
 
+### Changed
+
+- Split `App.jsx` into `Header`, `Footer`, `EmailSignup`, and `OtherWork` components under
+  `src/components/`, and moved the Firebase app/Firestore setup into `src/firebase.js`.
+  `EmailSignup` now owns its own email/submitted state instead of `App` holding it. The email
+  input is now a controlled component (it was missing `value`, so it never visually cleared
+  after a successful submission).
+- The "My Other Work & Partners" section only renders when the app is served from
+  `buzzbowl.org`/`www.buzzbowl.org`, so forks and local dev builds don't show Brett Kulp's
+  partner links.
+- Reworked the header and footer with a subtle retro theme (warm palette, an "Alfa Slab One"
+  wordmark, a gradient accent stripe) and tightened their spacing so the game menu is visible
+  without scrolling on a typical viewport. The header is now a compact badge + wordmark instead
+  of two large flanking logos, the long "how to play" instructions collapse into a native
+  `<details>` disclosure above the game, and the footer's contact/contributing links are a
+  single condensed row.
+- Added a small gap between the header's bottom accent stripe and the text below it.
+
 ### Fixed
 
 - Menu navigation (`MainMenu` and the in-game "Menu" button) now always restarts the target
@@ -41,6 +59,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which created a phantom second ball carrier and triggered an immediate tackle at play
   start. The ball carrier is now assigned exclusively by `checkBallCarrier()` during the
   formation toggle, the same way it is during normal gameplay.
+- `PhaserGame` now forces a scale recheck (`game.scale.refresh()`) when the tab becomes visible.
+  Phaser's `Scale.FIT` mode only recalculates on a window resize/orientation event or its own
+  ~500ms poll, and that poll rides the game's render loop, which browsers throttle in a
+  background tab — a game booted while its tab wasn't visible could lock in a stale canvas size
+  with nothing left to correct it.
+- `#game-container` only capped its size by viewport *width*, deriving height from a fixed 16:9
+  `aspect-ratio`. On a wide-but-short browser window that height overran the fold with nothing
+  to shrink it. Its width now also factors in the remaining viewport height, so it never grows
+  past what actually fits above the fold.
 
 ## [0.1.0] - 2026-07-28
 

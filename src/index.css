@@ -2,8 +2,19 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-weight: 400;
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+
+  /* Retro palette */
+  --font-display: 'Alfa Slab One', Georgia, serif;
+  --color-bg: #1c140d;
+  --color-cream: #f4e6cf;
+  --color-cream-dim: #c9b697;
+  --color-burnt-orange: #d9622b;
+  --color-rust: #a8431c;
+  --color-mustard: #e2a63b;
+  --color-avocado: #74803f;
+
+  color: var(--color-cream);
+  background-color: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -12,11 +23,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--color-mustard);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--color-burnt-orange);
 }
 
 body {
@@ -42,97 +53,11 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--color-mustard);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.play-type-container {
-  display: inline-flex; /* Arrange items inline like a button */
-  flex-direction: column; /* Stack label and controls vertically */
-  padding: 4px 8px;
-  font-family: sans-serif; /* Basic font */
-  background-color: #1a1a1a; /* Light background */
-  min-width: 120px; /* Give it some minimum width */
-  text-align: center;
-}
-
-/* Styles for the "playType" label text */
-.play-type-label {
-  font-size: 1em; /* Smaller font size for the label */
-  margin-bottom: 2px; /* Space below the label */
-}
-
-/* Styles for the div containing arrows and text */
-.play-type-controls {
-  display: flex; /* Arrange arrows and text horizontally */
-  align-items: center; /* Vertically align items in the middle */
-  justify-content: space-between; /* Space out arrows and text */
-  width: 100%; /* Use full width of the container */
-}
-
-/* Styles for the arrow buttons */
-.play-type-arrow {
-  background: none; /* No background for arrows */
-  border: none; /* No border for arrows */
-  cursor: pointer; /* Indicate clickable */
-  padding: 0 5px; /* Add some space around arrows */
-  font-size: 1em; /* Adjust size as needed */
-  font-weight: bold;
-}
-
-/* Styles for the text displaying the current play type (Run/Pass) */
-.play-type-text {
-  font-weight: bold; /* Make the current type bold */
-  margin: 0 4px; /* Add horizontal space around the text */
-  font-size: 0.9em;
-}
-
-/* In App.css */
-.game-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-  width: 100%;
-}
-
-
-/* In App.css */
-
-/* Make sure the header has a higher z-index */
-.site-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-  width: 100%;
-  position: relative;
-  z-index: 10; /* Add this to ensure header is above game canvas */
-}
-
-/* Game container styles are in App.css */
-
-/* Make sure the main-content is positioned correctly */
-.main-content {
-  position: relative;
-  z-index: 2; /* Above game container but below header */
-}
-
-/* Container needs to be set up for proper stacking context */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative; /* Add this to establish stacking context */
-}
 
