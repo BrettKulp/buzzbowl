@@ -137,6 +137,51 @@ describe('field bounds after resetPosition', () => {
     });
 });
 
+describe('touchdown at the goal line', () => {
+    // The bug in #8/#17: the old touchdown trigger points were hardcoded numbers that
+    // weren't actually symmetric to their own goal lines (left was 9px past its line, right
+    // only 1px off), so the "fires early" bug was obvious on the left and easy to miss on
+    // the right. leftGoalLineX/rightGoalLineX are now derived from one formula and shared by
+    // both the Matter end zone sensor and update()'s position-based backstop below -- this
+    // doesn't exercise the Matter sensor itself (that needs a physics step this harness
+    // doesn't do), but since both trigger points read from these same values, pinning them
+    // here still catches the actual regression: the two goal lines drifting out of sync.
+    it('exposes the same goal-line x for both end zones the sensors were built from', () => {
+        expect(scene.leftGoalLineX).toBe(135);
+        expect(scene.rightGoalLineX).toBe(1455);
+    });
+
+    it('scores a touchdown once the ball carrier passes the right goal line, not before', () => {
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.startPlay();
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+
+        ballCarrier.x = scene.rightGoalLineX;
+        scene.update(0, 16);
+        expect(scene.scored).toBe(false);
+
+        ballCarrier.x = scene.rightGoalLineX + 1;
+        scene.update(16, 16);
+        expect(scene.scored).toBe(true);
+    });
+
+    it('scores a touchdown once the ball carrier passes the left goal line, not before', () => {
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Left';
+        scene.startPlay();
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+
+        ballCarrier.x = scene.leftGoalLineX;
+        scene.update(0, 16);
+        expect(scene.scored).toBe(false);
+
+        ballCarrier.x = scene.leftGoalLineX - 1;
+        scene.update(16, 16);
+        expect(scene.scored).toBe(true);
+    });
+});
+
 describe('save on tackle', () => {
     beforeEach(() => {
         const store = new Map();
