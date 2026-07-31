@@ -133,7 +133,7 @@ export class PlayStateManager {
             log(ballCarrier);
             log(tackler);
         }
-        this.game.playPausedBeforeSnap = false;
+        this.game.playPausedBeforeSnap = falsei;
 
         try {
             log("ball carrier");

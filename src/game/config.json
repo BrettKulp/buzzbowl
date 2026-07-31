@@ -1,5 +1,5 @@
 {
-  "debug": "true",
+  "debug": "false",
   "colors": {
     "home": "#000088",
     "away": "#000000",
