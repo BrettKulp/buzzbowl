@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The save now updates immediately after every tackle, not just on formation/possession/
   Next Play changes — refreshing while the "Down!"/"Touchdown" popup is showing no longer
   loses that play's result.
+- Refreshing during the tackle popup after a touchdown or turnover on downs no longer
+  loads stale possession state. The possession change for those events is deferred to
+  `nextPlay`, so `scored` and `turnoverOnDowns` are now saved with the game state and
+  `loadGame` applies the pending possession change on resume, keeping the state
+  consistent.
 - Defensive formation positions are now clamped to the canvas the same way offense already
   was. Near either goal line — most reliably right after a change of possession pins the line
   of scrimmage deep — defenders (especially deep safeties) could be placed hundreds of pixels
@@ -30,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "Resume Game". `scene.restart()` with no argument keeps whatever data the scene was
   originally started with, so a resumed game kept replaying the same save every time Restart
   was clicked, making the button look like it did nothing.
+- `createPlayers()` no longer hardcodes `hasBall` on the Home RB based on the offensive
+  formation. After a possession-change resume, `checkBallCarrier()` only touches the current
+  offense's players, leaving the now-defensive Home RB with a stale ball-carrier flag —
+  which created a phantom second ball carrier and triggered an immediate tackle at play
+  start. The ball carrier is now assigned exclusively by `checkBallCarrier()` during the
+  formation toggle, the same way it is during normal gameplay.
 
 ## [0.1.0] - 2026-07-28
 

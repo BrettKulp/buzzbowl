@@ -338,7 +338,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: offConfig.ballCarrier === data.offensePosition,
+                hasBall: false,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,

@@ -128,10 +128,17 @@ export class PlayStateManager {
     }
 
     handleTackle(ballCarrier, tackler, type) {
+        if (config.debug) {
+            log("takle");
+            log(ballCarrier);
+            log(tackler);
+        }
         this.game.playPausedBeforeSnap = false;
 
         try {
+            log("ball carrier");
             if (ballCarrier) ballCarrier.logPlayer();
+            log("tackler");
             if (tackler) tackler.logPlayer();
         } catch {
             log("tackle was made by sideline/endzone");

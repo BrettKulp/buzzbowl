@@ -1,5 +1,6 @@
 import config from "./configLoader.js";
 import { warn } from "./logger";
+import { yardsToPixels } from "./helpers.js";
 
 const VERSION = 1;
 
@@ -8,6 +9,7 @@ const KEYS = [
     "offenseMovingRight", "targetEndzone",
     "formation", "defensiveFormation", "playType",
     "quarter", "gameClock",
+    "scored", "turnoverOnDowns",
 ];
 
 const VALID = {
@@ -60,6 +62,28 @@ export function loadGame(scene) {
     }
     scene.lineOfScrimmage.x = data.losX;
     scene.firstDownMarker.x = data.firstDownX;
+
+    if (scene.scored || scene.turnoverOnDowns) {
+        scene.possession = scene.possession === "Home" ? "Away" : "Home";
+        scene.targetEndzone = scene.targetEndzone === "Right" ? "Left" : "Right";
+        scene.offenseMovingRight = scene.targetEndzone === "Right";
+
+        if (scene.scored) {
+            scene.down = 1;
+            const losResetX = scene.targetEndzone === "Right"
+                ? config.canvas.width * 0.38
+                : config.canvas.width * 0.62;
+            scene.lineOfScrimmage.x = losResetX;
+        }
+
+        const fdX = scene.lineOfScrimmage.x
+            + (scene.targetEndzone === "Right" ? 1 : -1) * yardsToPixels(config.field.yardsToFirstDown);
+        scene.firstDownMarker.x = fdX;
+
+        scene.scored = false;
+        scene.turnoverOnDowns = false;
+    }
+
     return true;
 }
 
