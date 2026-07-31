@@ -125,3 +125,52 @@ describe('clearSave', () => {
         expect(loadGame(makeFakeScene())).toBe(false);
     });
 });
+
+describe('pending possession change on resume', () => {
+    it('applies possession flip when save has scored=true (touchdown deferred)', () => {
+        saveGame(makeFakeScene({
+            possession: 'Home', targetEndzone: 'Right', offenseMovingRight: true,
+            down: 2, scored: true, turnoverOnDowns: false,
+        }));
+
+        const loaded = makeFakeScene({ scored: false, turnoverOnDowns: false });
+        loadGame(loaded);
+
+        expect(loaded.possession).toBe('Away');
+        expect(loaded.targetEndzone).toBe('Left');
+        expect(loaded.offenseMovingRight).toBe(false);
+        expect(loaded.down).toBe(1);
+        expect(loaded.scored).toBe(false);
+    });
+
+    it('applies possession flip when save has turnoverOnDowns=true (turnover deferred)', () => {
+        saveGame(makeFakeScene({
+            possession: 'Home', targetEndzone: 'Right', offenseMovingRight: true,
+            down: 1, scored: false, turnoverOnDowns: true,
+            lineOfScrimmage: { x: 430 }, firstDownMarker: { x: 900 },
+        }));
+
+        const loaded = makeFakeScene({ scored: false, turnoverOnDowns: false });
+        loadGame(loaded);
+
+        expect(loaded.possession).toBe('Away');
+        expect(loaded.targetEndzone).toBe('Left');
+        expect(loaded.offenseMovingRight).toBe(false);
+        expect(loaded.down).toBe(1);
+        expect(loaded.lineOfScrimmage.x).toBe(430);
+        expect(loaded.turnoverOnDowns).toBe(false);
+    });
+
+    it('does nothing for a normal save with no pending flags', () => {
+        saveGame(makeFakeScene({
+            possession: 'Away', targetEndzone: 'Left', offenseMovingRight: false,
+            down: 2,
+        }));
+
+        const loaded = makeFakeScene();
+        loadGame(loaded);
+
+        expect(loaded.possession).toBe('Away');
+        expect(loaded.down).toBe(2);
+    });
+});

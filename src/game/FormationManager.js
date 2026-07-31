@@ -83,7 +83,9 @@ export class FormationManager {
 
                 this.resetPlayerAngle(player);
 
-                const finalX = losX + posConfig.xOffset * dirMult;
+                const finalX = this.clampToField(
+                    losX + posConfig.xOffset * dirMult
+                );
                 const finalY = player.origY + posConfig.yOffset;
 
                 player.initialX = finalX;

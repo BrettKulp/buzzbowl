@@ -354,7 +354,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: this.possession === "Home" && offConfig.ballCarrier === data.offensePosition,
+                hasBall: false,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,
@@ -373,7 +373,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: this.possession === "Away" && offConfig.ballCarrier === data.offensePosition,
+                hasBall: false,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,
@@ -898,10 +898,7 @@ export class BaseGameScene extends Scene {
             }
 
             if (!player.teamHasPossession(this) && player.targetCircle) {
-                log("removeing target circle");
                 player.targetCircle.setVisible(false);
-            } else {
-                log("not remogin target circle because player team does have possession");
             }
     }
 
@@ -948,7 +945,12 @@ export class BaseGameScene extends Scene {
     }
 
     restart() {
-        this.scene.restart();
+        // scene.restart() with no argument keeps whatever data the scene was originally
+        // started with (Phaser: "If no value is given it will not overwrite any previous data
+        // that may exist"). If this scene was entered via Resume, that's still {resume: true} --
+        // so restart would silently reload the old save instead of starting fresh. Pass an
+        // empty object to clear it.
+        this.scene.restart({});
     }
 
     returnToMenu() {
@@ -997,6 +999,7 @@ export class BaseGameScene extends Scene {
 
     handleTackle(ballCarrier, tackler, type) {
         this.playStateManager.handleTackle(ballCarrier, tackler, type);
+        saveGame(this);
     }
 
     incrementDown() {

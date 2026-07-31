@@ -155,11 +155,15 @@ export class PlayStateManager {
             `traveledSinceSnap=${traveled}px LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
         );
 
-        try {
-            if (ballCarrier) ballCarrier.logPlayer();
-            if (tackler) tackler.logPlayer();
-        } catch {
-            log("tackle was made by sideline/endzone");
+        if (config.debug) {
+            try {
+                log("ball carrier");
+                if (ballCarrier) ballCarrier.logPlayer();
+                log("tackler");
+                if (tackler) tackler.logPlayer();
+            } catch {
+                log("tackle was made by sideline/endzone");
+            }
         }
 
         let tackleX;

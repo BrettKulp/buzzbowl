@@ -57,10 +57,10 @@ test('starts a standard game from the menu', async ({ page }) => {
     expect(errors).toEqual([]);
 });
 
-// Both switchScene and the in-game Menu button sleep the outgoing scene and wake it if
-// it has been slept before. `sleep` does not fire `shutdown`, so BaseGameScene's input
-// teardown never runs on this path -- re-entering a slept scene is where duplicate
-// handlers and stale state would show up.
+// Both switchScene and the in-game Menu button go through `scene.start()`, which fully
+// shuts down the outgoing scene and re-runs init/create on the target every time -- even if
+// that scene was already running or previously left behind. Re-entering a scene this way is
+// where leftover state (or listeners `shutdown` failed to tear down) would show up.
 test('survives a round trip back through the menu into free play', async ({ page }) => {
     const { canvas, errors } = await openMenu(page);
     const menuFrame = await canvas.screenshot();

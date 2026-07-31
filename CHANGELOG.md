@@ -18,10 +18,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Player collision body now matches the visible base (rectangle sized to the base's width/height) instead of an oversized circle that extended well past the drawn shape.
 - Tackles no longer bounce the ball carrier and tackler apart before the down is called: pausing a play now freezes every player's physics body in place instead of only zeroing velocity, so Matter's collision-resolution can't shove overlapping bodies apart after contact.
-- Menu navigation no longer replays stale scene state: returning to the menu and switching scenes now always goes through `scene.start()`, which fully re-runs `init()`/`create()`, instead of `sleep()`/`wake()`, which silently resumed whatever was left in memory (most visibly, a tackle almost instantly on the next Start after leaving mid-play and hitting Resume).
+- Menu navigation (`MainMenu` and the in-game "Menu" button) now always restarts the target
+  scene instead of waking a previously slept one. Waking never re-ran a scene's `init()`, so
+  once you'd visited Standard Game or Free Play once, every later visit silently replayed
+  whatever state was left in memory — most visibly, starting a new Standard Game after
+  bouncing through Free Play would resume the old game instead of starting fresh.
 - Touchdowns were firing about 3 yards early on the left end zone (barely early on the right): the end zone sensors were hardcoded at positions that weren't actually symmetric relative to their own goal lines (the left sensor sat 9px past its goal line, the right one only 1px off). Both are now derived from the same goal-line formula, so a touchdown fires consistently on either side as soon as any part of the ball carrier crosses the goal line (leading edge, as before), not when their center does. The frame-by-frame tunneling backstop in `update()` used the same stale hardcoded positions and has been updated to match.
 - Player collision bodies are now chamfered to match the rounded corners of the drawn base, so a tackle can no longer register on a sharp rectangular corner while the rounded visual corners still show daylight between the two players.
-- Whichever team's roster is created without possession no longer starts with a phantom ball carrier: `createPlayers()` set `hasBall` on the home player matching the offensive formation's `ballCarrier` position unconditionally (and hardcoded `false` for away), instead of checking who actually had possession. When Away had the ball, Home's QB/RB spawned already flagged as carrying it; since every later ball-carrier update (`checkBallCarrier`, `togglePlayType`) only touches the *offensive* team, that stale flag survived untouched on defense. The collision handler treats any `hasBall === true` player as the ball carrier regardless of possession, so the first contact that defender made with anyone — almost immediately after snap — was scored as an instant tackle, over and over, with the down count advancing but no real play ever developing.
+- The save now updates immediately after every tackle, not just on formation/possession/
+  Next Play changes — refreshing while the "Down!"/"Touchdown" popup is showing no longer
+  loses that play's result.
+- Refreshing during the tackle popup after a touchdown or turnover on downs no longer
+  loads stale possession state. The possession change for those events is deferred to
+  `nextPlay`, so `scored` and `turnoverOnDowns` are now saved with the game state and
+  `loadGame` applies the pending possession change on resume, keeping the state
+  consistent.
+- Defensive formation positions are now clamped to the canvas the same way offense already
+  was. Near either goal line — most reliably right after a change of possession pins the line
+  of scrimmage deep — defenders (especially deep safeties) could be placed hundreds of pixels
+  off-canvas.
+- The in-game "Restart" button now actually starts a fresh game after a game was entered via
+  "Resume Game". `scene.restart()` with no argument keeps whatever data the scene was
+  originally started with, so a resumed game kept replaying the same save every time Restart
+  was clicked, making the button look like it did nothing.
+- `createPlayers()` no longer hardcodes `hasBall` on the Home RB based on the offensive
+  formation. After a possession-change resume, `checkBallCarrier()` only touches the current
+  offense's players, leaving the now-defensive Home RB with a stale ball-carrier flag —
+  which created a phantom second ball carrier and triggered an immediate tackle at play
+  start. The ball carrier is now assigned exclusively by `checkBallCarrier()` during the
+  formation toggle, the same way it is during normal gameplay.
 
 ## [0.1.0] - 2026-07-28
 
