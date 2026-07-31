@@ -6,7 +6,7 @@ import EFPlayCall from '../assets/EFPlayCall.webp'
 function OtherWork() {
   return (
     <section className="other-work">
-      <h2>My Other Work & Partners</h2>
+      <h2>Partners</h2>
       <div className="projects">
         <div className="project">
           <a href="https://discdyetracker.com/" target="_blank">

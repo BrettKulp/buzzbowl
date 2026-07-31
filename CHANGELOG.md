@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Changed the Vite `base` from `/buzzbowl/` to `/` so the Firebase deploy at `buzzbowl.org`
+  matches the paths emitted in `index.html`. The previous deploy placed `dist` at the site
+  root while `index.html` referenced `/buzzbowl/assets/*`, so asset requests were caught by
+  the SPA rewrite and returned `index.html` (`text/html`), breaking module script loading.
+- Updated `firebase.json` caching so `index.html` is served with `no-cache` while hashed JS/CSS
+  assets use long-lived immutable caching. Previously `index.html` was cached for an hour, so
+  after a deploy a stale cached page could request an old hashed bundle that no longer existed,
+  and the SPA catch-all rewrite returned `index.html` (MIME `text/html`) in its place, breaking
+  module script loading.
+
 ### Changed
 
 - Split `App.jsx` into `Header`, `Footer`, `EmailSignup`, and `OtherWork` components under
