@@ -16,6 +16,14 @@ export class PlayStateManager {
         this.game.playPausedBeforeSnap = false;
         this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
         this.game.passAttempted = false;
+        this.game.snapAt = this.game.time.now;
+
+        const snapBallCarrier = getAllPlayers(this.game).find(p => p.hasBall);
+        console.log(
+            `[DEBUG] startPlay: possession=${this.game.possession} down=${this.game.down} ` +
+            `LOS=${this.game.lineOfScrimmage.x.toFixed(1)} playType=${this.game.playType} ` +
+            `ballCarrier=${snapBallCarrier ? `id=${snapBallCarrier.id} x=${snapBallCarrier.x.toFixed(1)}` : "none"}`
+        );
 
         this.game.setLOSBarrierSensor(true);
 
@@ -51,7 +59,10 @@ export class PlayStateManager {
     }
 
     changePossession(keepLOS = false) {
-        log("change possession");
+        console.log(
+            `[DEBUG] changePossession: ${this.game.possession} -> ${this.game.possession === "Home" ? "Away" : "Home"} ` +
+            `keepLOS=${keepLOS} LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
+        );
 
         this.game.possession = this.game.possession === "Home" ? "Away" : "Home";
         this.game.targetEndzone = this.game.targetEndzone === "Right" ? "Left" : "Right";
@@ -94,6 +105,11 @@ export class PlayStateManager {
     }
     
     nextPlay() {
+        console.log(
+            `[DEBUG] nextPlay: scored=${this.game.scored} turnoverOnDowns=${this.game.turnoverOnDowns} ` +
+            `down=${this.game.down} possession=${this.game.possession}`
+        );
+
         if (this.game.scored) {
             this.changePossession();
         }
@@ -131,6 +147,15 @@ export class PlayStateManager {
         this.game.playPausedBeforeSnap = false;
 
         if (config.debug) {
+            const elapsedMs = this.game.snapAt != null ? (this.game.time.now - this.game.snapAt).toFixed(0) : "?";
+            const traveled = ballCarrier ? (ballCarrier.x - this.game.lineOfScrimmage.previousX).toFixed(1) : "n/a";
+            console.log(
+                `[DEBUG] handleTackle type=${type || "Tackle"} elapsedMs=${elapsedMs} ` +
+                `ballCarrier=${ballCarrier ? `id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)}` : "none"} ` +
+                `tackler=${tackler ? `id=${tackler.id} team=${tackler.team} entityType=${tackler.entityType}` : "none"} ` +
+                `traveledSinceSnap=${traveled}px LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
+            );
+
             try {
                 log("ball carrier");
                 if (ballCarrier) ballCarrier.logPlayer();
@@ -197,6 +222,10 @@ export class PlayStateManager {
             } else {
                 this.incrementDown();
             }
+            console.log(
+                `[DEBUG] handleNonTouchdown: newLOS=${newLOS.toFixed(1)} firstDownMarker=${this.game.firstDownMarker.x.toFixed(1)} ` +
+                `reachedFirstDown=${reachedFirstDown} down=${this.game.down} turnoverOnDowns=${this.game.turnoverOnDowns}`
+            );
             this.game.showDownUI();
         } else if (type === "Incomplete") {
             this.incrementDown();

@@ -2,10 +2,23 @@ import Phaser from "phaser";
 import gameConfig from "./configLoader.js";
 import { log, error } from "./logger";
 
-export class Player extends Phaser.GameObjects.Rectangle {
+export const PLAYER_WIDTH = 60;
+const PLAYER_HEIGHT = 40;
+const CAPSULE_RADIUS = 10;
+const FRONT_STRIPE_WIDTH = 2;
+const FRONT_STRIPE_HEIGHT = 12;
+const FRONT_STRIPE_X_OFFSETS = [21, 26];
+const FRONT_STRIPE_COLOR = 0xcccccc;
+
+export class Player extends Phaser.GameObjects.Graphics {
     constructor(scene, x, y, config) {
-        super(scene, x, y, 60, 40, config.color);
+        super(scene, { x, y });
         scene.add.existing(this);
+
+        this.width = PLAYER_WIDTH;
+        this.height = PLAYER_HEIGHT;
+        this.displayOriginX = PLAYER_WIDTH / 2;
+        this.displayOriginY = PLAYER_HEIGHT / 2;
 
         const awayInitialBaseAngle = Math.PI;
 
@@ -41,10 +54,12 @@ export class Player extends Phaser.GameObjects.Rectangle {
 
         if (config.hasBall) {
             this.fillColor = gameConfig.colors.ballCarrier;
+        } else {
+            this.fillColor = config.color;
         }
 
         config.group.add(this);
-        scene.matter.add.gameObject(this, { ...config.physicsConfig });
+        scene.matter.add.gameObject(this, { ...config.physicsConfig, chamfer: { radius: CAPSULE_RADIUS } });
 
         this.setInteractive({ useHandCursor: true });
         scene.input.setDraggable(this);
@@ -62,6 +77,27 @@ export class Player extends Phaser.GameObjects.Rectangle {
         scene.input.setDraggable(this.rotationHandle);
     }
 
+    get fillColor() {
+        return this._fillColor;
+    }
+
+    set fillColor(color) {
+        this._fillColor = color;
+        this.clear();
+        this.fillStyle(color, 1);
+        this.fillRoundedRect(
+            -PLAYER_WIDTH / 2, -PLAYER_HEIGHT / 2, PLAYER_WIDTH, PLAYER_HEIGHT, CAPSULE_RADIUS
+        );
+
+        this.fillStyle(FRONT_STRIPE_COLOR, 1);
+        for (const xOffset of FRONT_STRIPE_X_OFFSETS) {
+            this.fillRect(
+                xOffset - FRONT_STRIPE_WIDTH / 2, -FRONT_STRIPE_HEIGHT / 2,
+                FRONT_STRIPE_WIDTH, FRONT_STRIPE_HEIGHT
+            );
+        }
+    }
+
     setHasBall(hasBall) {
         this.hasBall = hasBall;
         if (hasBall) {
@@ -76,6 +112,7 @@ export class Player extends Phaser.GameObjects.Rectangle {
             try {
                 this.scene.matter.body.setVelocity(this.body, { x: 0, y: 0 });
                 this.scene.matter.body.setAngularVelocity(this.body, 0);
+                this.scene.matter.body.setStatic(this.body, true);
             } catch (e) {
                 error("Error stopping player:", e);
             }
