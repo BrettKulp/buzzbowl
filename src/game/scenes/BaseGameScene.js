@@ -878,10 +878,7 @@ export class BaseGameScene extends Scene {
             }
 
             if (!player.teamHasPossession(this) && player.targetCircle) {
-                log("removeing target circle");
                 player.targetCircle.setVisible(false);
-            } else {
-                log("not remogin target circle because player team does have possession");
             }
     }
 
