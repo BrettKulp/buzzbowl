@@ -32,7 +32,9 @@
 /* Header Styles */
 .site-header {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 1.5rem;
   width: 100%;
   padding: 0.75rem 0 0.85rem;
   margin-bottom: 0.85rem;
@@ -47,37 +49,31 @@
   right: 0;
   bottom: 0;
   height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-rust),
-    var(--color-burnt-orange) 35%,
-    var(--color-mustard) 70%,
-    var(--color-avocado)
-  );
+  background: #3a3a3a;
 }
 
 .site-header__brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  text-align: center;
 }
 
-.site-header__badge {
-  height: 2.75rem;
-  width: 2.75rem;
+.site-header__logo {
+  height: 3.5rem;
+  width: 3.5rem;
   object-fit: cover;
   border-radius: 10px;
-  border: 2px solid var(--color-mustard);
   will-change: filter;
   transition: filter 300ms;
 }
 
-.site-header__badge:hover {
-  filter: drop-shadow(0 0 1.5em var(--color-burnt-orange));
+.site-header__logo--mirrored {
+  transform: scaleX(-1);
 }
 
-.site-header__wordmark {
-  text-align: left;
+.site-header__logo:hover {
+  filter: drop-shadow(0 0 1.5em var(--color-accent-hover));
 }
 
 .site-header h1 {
@@ -86,8 +82,7 @@
   font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
   line-height: 1;
   letter-spacing: 0.02em;
-  color: var(--color-mustard);
-  text-shadow: 2px 2px 0 var(--color-rust);
+  color: #f3f3f3;
 }
 
 .site-header__tagline {
@@ -95,7 +90,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-cream-dim);
+  color: var(--color-text-dim);
 }
 
 .logo {
@@ -107,7 +102,7 @@
 }
 
 .logo:hover {
-  filter: drop-shadow(0 0 4em var(--color-burnt-orange));
+  filter: drop-shadow(0 0 4em var(--color-accent-hover));
 }
 
 .screen-warning {
@@ -153,7 +148,7 @@
     padding: 0.25rem 0;
   }
 
-  .site-header__badge {
+  .site-header__logo {
     display: none;
   }
 
@@ -246,7 +241,7 @@
 /* Site notice + collapsible instructions */
 .site-notice {
   font-size: 0.95rem;
-  color: var(--color-cream-dim);
+  color: var(--color-text-dim);
   text-align: center;
   margin: 0;
   max-width: 640px;
@@ -263,14 +258,17 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid var(--color-mustard);
-  border-radius: 999px;
-  color: var(--color-mustard);
-  font-size: 0.85rem;
+  gap: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-accent);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
   letter-spacing: 0.04em;
   list-style: none;
+  transition: background-color 0.25s;
 }
 
 .how-to-play summary::marker,
@@ -284,18 +282,18 @@
 }
 
 .how-to-play[open] summary::after {
-  content: '\2212';
+  content: '-';
 }
 
 .how-to-play summary:hover {
-  background: rgba(226, 166, 59, 0.1);
+  background-color: var(--color-accent-hover);
 }
 
 .how-to-play p {
   margin: 0.75rem 0 0;
   font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--color-cream-dim);
+  color: var(--color-text-dim);
   text-align: left;
 }
 
@@ -342,11 +340,11 @@
 
 .input-group input:focus {
   outline: none;
-  border-color: rgba(226, 166, 59, 0.67);
+  border-color: rgba(68, 68, 170, 0.67);
 }
 
 .input-group button:hover {
-  border-color: rgba(226, 166, 59, 0.67);
+  border-color: rgba(68, 68, 170, 0.67);
   cursor: pointer;
 }
 
@@ -358,7 +356,7 @@
 .input-group button:focus,
 .input-group button:focus-visible {
   outline: none;
-  border-color: rgba(226, 166, 59, 0.67);
+  border-color: rgba(68, 68, 170, 0.67);
 }
 
 .submitted-message {
@@ -377,7 +375,7 @@
   margin: 0 auto;
   padding: 1.25rem 0 0;
   text-align: center;
-  border-top: 1px solid rgba(226, 166, 59, 0.25);
+  border-top: 1px solid rgba(68, 68, 170, 0.25);
 }
 
 .site-footer__links {
@@ -392,23 +390,23 @@
 }
 
 .site-footer__links a:not(:last-child) {
-  border-right: 1px solid rgba(226, 166, 59, 0.35);
+  border-right: 1px solid rgba(68, 68, 170, 0.35);
 }
 
 .site-footer__credit {
   margin: 0.75rem 0 0;
   font-size: 0.8rem;
-  color: var(--color-cream-dim);
+  color: var(--color-text-dim);
 }
 
 .contact-link {
-  color: var(--color-mustard);
+  color: var(--color-accent);
   text-decoration: none;
   transition: color 0.25s;
 }
 
 .contact-link:hover {
-  color: var(--color-burnt-orange);
+  color: var(--color-accent-hover);
 }
 
 /* Projects Section */
@@ -453,12 +451,12 @@
 .project-link {
   font-size: 0.9em;
   text-decoration: underline;
-  color: var(--color-mustard);
+  color: var(--color-accent);
   transition: color 0.25s;
 }
 
 .project-link:hover {
-  color: var(--color-burnt-orange);
+  color: var(--color-accent-hover);
 }
 
 /* Responsive Styles */

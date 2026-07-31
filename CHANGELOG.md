@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `<details>` disclosure above the game, and the footer's contact/contributing links are a
   single condensed row.
 - Added a small gap between the header's bottom accent stripe and the text below it.
+- Reverted the site palette from the retro brown/mustard scheme to Vite's default gray with a
+  purple accent that matches the in-game `Button` color (`#4444aa`). The header's "Buzz Bowl"
+  wordmark is now white and the background is dark gray again.
+- Restored the flanking mirrored football logos around the header wordmark, and restyled the
+  "How to play" disclosure from a purple-outlined pill into a solid purple button that matches
+  the in-game buttons. Removed the purple border around the header logos, and replaced the
+  purple accent stripe below the header with a neutral gray line. Restored the layered
+  `text-shadow` effect on the "Buzz Bowl" wordmark with a dark gray offset.
 
 ### Fixed
 

@@ -3,17 +3,15 @@
   font-weight: 400;
   color-scheme: light dark;
 
-  /* Retro palette */
+  /* Vite default gray + game button purple */
   --font-display: 'Alfa Slab One', Georgia, serif;
-  --color-bg: #1c140d;
-  --color-cream: #f4e6cf;
-  --color-cream-dim: #c9b697;
-  --color-burnt-orange: #d9622b;
-  --color-rust: #a8431c;
-  --color-mustard: #e2a63b;
-  --color-avocado: #74803f;
+  --color-bg: #242424;
+  --color-text: rgba(255, 255, 255, 0.87);
+  --color-text-dim: rgba(255, 255, 255, 0.6);
+  --color-accent: #4444aa;
+  --color-accent-hover: #5555bb;
 
-  color: var(--color-cream);
+  color: var(--color-text);
   background-color: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,11 +21,11 @@
 
 a {
   font-weight: 500;
-  color: var(--color-mustard);
+  color: var(--color-accent);
   text-decoration: inherit;
 }
 a:hover {
-  color: var(--color-burnt-orange);
+  color: var(--color-accent-hover);
 }
 
 body {
@@ -53,7 +51,7 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: var(--color-mustard);
+  border-color: var(--color-accent);
 }
 button:focus,
 button:focus-visible {
