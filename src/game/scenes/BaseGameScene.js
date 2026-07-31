@@ -10,6 +10,7 @@ import { log } from "../logger";
 import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
+import { saveGame, loadGame } from "../saveGame";
 
 export class BaseGameScene extends Scene {
     constructor(key) {
@@ -61,7 +62,7 @@ export class BaseGameScene extends Scene {
 
     // Re-runs on every scene.start()/scene.restart() call, unlike the constructor —
     // this is where per-game state that mutates during play must be reset.
-    init() {
+    init(data) {
         this.home = null;
         this.away = null;
 
@@ -93,6 +94,8 @@ export class BaseGameScene extends Scene {
         this.down = 1;
         this.homeScore = 0;
         this.awayScore = 0;
+
+        if (data?.resume) loadGame(this);
     }
 
     preload() {
@@ -269,7 +272,7 @@ export class BaseGameScene extends Scene {
 
         this.firstDownMarker.marker = new FieldMarker(
             this,
-            this.lineOfScrimmage.x + yardsToPixels(config.field.yardsToFirstDown),
+            this.firstDownMarker.x,
             this.startY,
             this.fieldHeight,
             c.firstDown
@@ -335,7 +338,7 @@ export class BaseGameScene extends Scene {
                 id: id,
                 offensivePosition: data.offensePosition,
                 defensivePosition: data.defensePosition,
-                hasBall: offConfig.ballCarrier === data.offensePosition,
+                hasBall: false,
                 canReceivePass: config.players.canReceivePass.includes(data.offensePosition),
                 initialX: losX,
                 initialY: centerY,
@@ -656,15 +659,7 @@ export class BaseGameScene extends Scene {
 
         // Menu button
         new Button(this, this.canvasWidth - 100, 40, "Menu", { width: 100, height: 60, labelStyle: arrowStyle })
-            .onClick(() => {
-                this.pausePlay();
-                this.scene.sleep(this.scene.key);
-                if (this.scene.isSleeping("MainMenu")) {
-                    this.scene.wake("MainMenu");
-                } else {
-                    this.scene.launch("MainMenu");
-                }
-            });
+            .onClick(() => this.returnToMenu());
 
         // Play type controls
         new Button(this, 280, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
@@ -883,10 +878,7 @@ export class BaseGameScene extends Scene {
             }
 
             if (!player.teamHasPossession(this) && player.targetCircle) {
-                log("removeing target circle");
                 player.targetCircle.setVisible(false);
-            } else {
-                log("not remogin target circle because player team does have possession");
             }
     }
 
@@ -933,21 +925,34 @@ export class BaseGameScene extends Scene {
     }
 
     restart() {
-        this.scene.restart();
+        // scene.restart() with no argument keeps whatever data the scene was originally
+        // started with (Phaser: "If no value is given it will not overwrite any previous data
+        // that may exist"). If this scene was entered via Resume, that's still {resume: true} --
+        // so restart would silently reload the old save instead of starting fresh. Pass an
+        // empty object to clear it.
+        this.scene.restart({});
+    }
+
+    returnToMenu() {
+        this.pausePlay();
+        this.scene.start("MainMenu");
     }
 
     // --- Delegated methods ---
 
     changeformation() {
         this.formationManager.toggleOffensiveFormation();
+        saveGame(this);
     }
 
     changeDefensiveFormation() {
         this.formationManager.toggleDefensiveFormation();
+        saveGame(this);
     }
 
     changePlayType() {
         this.formationManager.togglePlayType();
+        saveGame(this);
     }
 
     checkBallCarrier() {
@@ -956,6 +961,7 @@ export class BaseGameScene extends Scene {
 
     changePossession(keepLOS = false) {
         this.playStateManager.changePossession(keepLOS);
+        saveGame(this);
     }
 
     startPlay() {
@@ -968,10 +974,12 @@ export class BaseGameScene extends Scene {
 
     nextPlay() {
         this.playStateManager.nextPlay();
+        saveGame(this);
     }
 
     handleTackle(ballCarrier, tackler, type) {
         this.playStateManager.handleTackle(ballCarrier, tackler, type);
+        saveGame(this);
     }
 
     incrementDown() {

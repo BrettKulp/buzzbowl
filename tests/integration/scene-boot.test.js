@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Phaser from 'phaser';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
 import { getAllPlayers, getHomePlayers, getAwayPlayers } from '../../src/game/helpers.js';
+import { hasSave, loadGame } from '../../src/game/saveGame.js';
 
 let game;
 let scene;
@@ -86,6 +87,129 @@ describe('game clock', () => {
 
         scene.update(1000, 1000);
         expect(scene.gameClock).toBeCloseTo(scene.quarterLength - 1, 5);
+    });
+});
+
+describe('field bounds after resetPosition', () => {
+    // Defensive formation offsets (up to 260px, for deep safeties) never got the field-bounds
+    // clamp offense already had. A drive pinned at the goal line -- exactly where
+    // handleNonTouchdown's own LOS clamp (145/1455) kicks in -- pushed defenders hundreds of
+    // pixels past the 1600-wide canvas.
+    it('keeps every player on-canvas after a snap deep in the red zone', () => {
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.offenseMovingRight = true;
+        scene.down = 3;
+        scene.lineOfScrimmage.x = 1440;
+        scene.firstDownMarker.x = 1470;
+
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        ballCarrier.x = 1440;
+        scene.handleTackle(ballCarrier, null, 'Tackle');
+        scene.nextPlay();
+
+        for (const player of getAllPlayers(scene)) {
+            expect(player.x, `player ${player.id} x`).toBeGreaterThanOrEqual(10);
+            expect(player.x, `player ${player.id} x`).toBeLessThanOrEqual(1590);
+        }
+    });
+
+    it('keeps every player on-canvas after a turnover on downs pinned deep', () => {
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.offenseMovingRight = true;
+        scene.down = 4;
+        scene.lineOfScrimmage.x = 1440;
+        scene.firstDownMarker.x = 1470;
+
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        ballCarrier.x = 1440;
+        scene.handleTackle(ballCarrier, null, 'Tackle');
+        expect(scene.turnoverOnDowns).toBe(true);
+
+        scene.nextPlay();
+        expect(scene.possession).toBe('Away');
+
+        for (const player of getAllPlayers(scene)) {
+            expect(player.x, `player ${player.id} x`).toBeGreaterThanOrEqual(10);
+            expect(player.x, `player ${player.id} x`).toBeLessThanOrEqual(1590);
+        }
+    });
+});
+
+describe('save on tackle', () => {
+    beforeEach(() => {
+        const store = new Map();
+        globalThis.localStorage = {
+            getItem: (k) => (store.has(k) ? store.get(k) : null),
+            setItem: (k, v) => store.set(k, String(v)),
+            removeItem: (k) => store.delete(k),
+        };
+    });
+
+    // Normal tackles save the play result immediately so a refresh during the
+    // end-of-play popup preserves down/LOS progress.
+    it('saves play result on a normal tackle', () => {
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        scene.lineOfScrimmage.x = 600;
+        scene.firstDownMarker.x = 900;
+        ballCarrier.x = 650;
+
+        scene.handleTackle(ballCarrier, null, 'Tackle');
+
+        expect(hasSave('StandardGame')).toBe(true);
+        const reloaded = { scene: { key: 'StandardGame' }, lineOfScrimmage: {}, firstDownMarker: {} };
+        loadGame(reloaded);
+        expect(reloaded.down).toBe(scene.down);
+    });
+
+    // Turnover on downs also saves immediately, but the possession change is
+    // deferred to nextPlay. On resume, loadGame detects the saved
+    // turnoverOnDowns flag and applies the pending change.
+    it('saves on a tackle that causes a turnover on downs and resolves possession on resume', () => {
+        scene.possession = 'Home';
+        scene.down = 4;
+        scene.offenseMovingRight = true;
+        scene.targetEndzone = 'Right';
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        scene.lineOfScrimmage.x = 600;
+        scene.firstDownMarker.x = 900;
+        ballCarrier.x = 400;
+
+        scene.handleTackle(ballCarrier, null, 'Tackle');
+
+        expect(scene.turnoverOnDowns).toBe(true);
+        expect(hasSave('StandardGame')).toBe(true);
+
+        const reloaded = {
+            scene: { key: 'StandardGame' },
+            lineOfScrimmage: {},
+            firstDownMarker: {},
+            possession: 'Home',
+            targetEndzone: 'Right',
+            offenseMovingRight: true,
+            down: 1,
+        };
+        loadGame(reloaded);
+        expect(reloaded.possession).toBe('Away');
+        expect(reloaded.down).toBe(1);
+    });
+
+    // After nextPlay resolves the deferred possession change, the save
+    // always captures a fully-consistent state with no pending flags.
+    it('saves on nextPlay with consistent state', () => {
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        scene.lineOfScrimmage.x = 600;
+        scene.firstDownMarker.x = 900;
+        ballCarrier.x = 650;
+
+        scene.handleTackle(ballCarrier, null, 'Tackle');
+        scene.nextPlay();
+
+        expect(hasSave('StandardGame')).toBe(true);
+        const reloaded = { scene: { key: 'StandardGame' }, lineOfScrimmage: {}, firstDownMarker: {} };
+        loadGame(reloaded);
+        expect(reloaded.down).toBe(scene.down);
     });
 });
 
