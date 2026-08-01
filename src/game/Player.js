@@ -98,15 +98,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         }
     }
 
-    setHasBall(hasBall) {
-        this.hasBall = hasBall;
-        if (hasBall) {
-            this.fillColor = gameConfig.colors.ballCarrier
-        } else {
-            this.fillColor = this.team === "Home" ? gameConfig.colors.home : gameConfig.colors.away;
-        }
-    }
-
     stop() {
         if (this.body) {
             try {
@@ -213,8 +204,15 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (hasBall !== this.hasBall) this.setHasBall(hasBall);
     }
 
-    setTeamColor(color) {
-        this.fillColor = color;
+    // Reads the scene's team colors rather than config.colors directly, so handing the ball off
+    // mid-replay repaints the player in the user's chosen team color, not the config default.
+    setHasBall(hasBall) {
+        this.hasBall = hasBall;
+        if (hasBall) {
+            this.fillColor = gameConfig.colors.ballCarrier;
+        } else {
+            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
+        }
     }
 
     updateVeer(dt, params) {
@@ -267,14 +265,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (this._testDot) {
             this._testDot.destroy();
             this._testDot = null;
-        }
-    }
-
-    resetColor() {
-        if (this.hasBall) {
-            this.fillColor = gameConfig.colors.ballCarrier;
-        } else {
-            this.fillColor = this.team === "Home" ? gameConfig.colors.home : gameConfig.colors.away;
         }
     }
 

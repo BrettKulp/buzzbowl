@@ -111,9 +111,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   condition alone ends the play, both independently toggleable and on by default (6s / 5 yards)
   to guard against Matter.js's zero-gravity physics letting a player circle in place
   indefinitely.
+- Team color picker on the Preferences screen: choose each team's color from a 10-color preset
+  palette (cycled with the same `<`/`>` selector as every other row, with a live swatch). Unlike
+  the quarter/house-rule settings, this applies to both Standard Game and Free Play, and to a
+  resumed game as well — it's a cosmetic preference, not part of a match's saved rules. Cycling
+  skips whichever color the other team is using, so the two teams can never be set to the same
+  one. The palette deliberately contains no color close to the ball carrier's highlight, the
+  field green, or the white facing-direction stripes.
+- "Start New Game" and "Resume Game" buttons on the Preferences screen, so settings can be tried
+  without a round trip through the main menu, and so a game in progress survives a detour into
+  Preferences. They mirror the main menu's equivalents, and "Resume Game" only appears when
+  there is a save to resume. The rows above were tightened to make room.
+- "Restore Defaults" button on the Preferences screen, smaller and below the two play buttons.
+  It clears both saved settings buckets, after which every row falls back to its `config.json`
+  default and the main menu goes back to reporting "Using default settings". It only appears
+  once something has actually been changed — on a default setup it would be a no-op — and
+  disappears again as soon as it's used.
+
+### Removed
+
+- Dead `Player` methods `resetColor()` and `setTeamColor()`. Neither had any callers — the live
+  code sets `player.hasBall` and `player.fillColor` directly — so they were quietly diverging
+  from the paths that actually run. `setHasBall()` is kept: play review's `applyRecordedFrame()`
+  calls it, and it now reads the scene's team colors so a replayed hand-off repaints in the
+  chosen color rather than the `config.json` default.
 
 ### Fixed
 
+- Preferences rows no longer clip the first and last letters of their longest values ("Play
+  Count", "Sky Blue") — the `<`/`>` arrow buttons were only 100px either side of the centred
+  value and overlapped it; they now sit 150px out.
 - Player collision body now matches the visible base (rectangle sized to the base's width/height) instead of an oversized circle that extended well past the drawn shape.
 - Tackles no longer bounce the ball carrier and tackler apart before the down is called: pausing a play now freezes every player's physics body in place instead of only zeroing velocity, so Matter's collision-resolution can't shove overlapping bodies apart after contact.
 - Menu navigation (`MainMenu` and the in-game "Menu" button) now always restarts the target

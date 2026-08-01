@@ -3,7 +3,7 @@ import { Button } from "../Button";
 import config from "../configLoader.js";
 import { InfoButton } from "../InfoButton";
 import { hasSave } from "../saveGame";
-import { loadSettings } from "../gameSettings.js";
+import { hasCustomSettings } from "../gameSettings.js";
 
 export class MainMenu extends Scene {
 
@@ -45,7 +45,7 @@ export class MainMenu extends Scene {
         this.add.text(this.canvasWidth / 2, 100, "Buzz Bowl", { fontSize: "72px", fill: "#fff", fontStyle: "bold" }).setOrigin(0.5);
         this.add.text(this.canvasWidth / 2, 200, "footbal simulation game", { fontSize: "32px", fill: "#fff", fontStyle: "bold" }).setOrigin(0.5);
 
-        const usingCustomSettings = loadSettings() !== null;
+        const usingCustomSettings = hasCustomSettings();
         this.add.text(this.canvasWidth / 2, this.canvasHeight - 130,
             usingCustomSettings ? "Using custom settings" : "Using default settings",
             { fontSize: "22px", fill: "#ccc" }

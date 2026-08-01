@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { saveSettings, loadSettings } from '../../src/game/gameSettings.js';
+import { saveSettings, loadSettings, saveTeamColors, loadTeamColors } from '../../src/game/gameSettings.js';
 import config from '../../src/game/configLoader.js';
 
 beforeEach(() => {
@@ -69,5 +69,45 @@ describe('gameSettings validation', () => {
         localStorage.setItem('buzzbowl:settings:StandardGame', JSON.stringify(raw));
 
         expect(loadSettings()).toBeNull();
+    });
+});
+
+describe('team colors round-trip', () => {
+    // Kept in a separate storage bucket from the Standard-Game settings above, since colors
+    // apply to Free Play too.
+    it('returns null when nothing has been saved', () => {
+        expect(loadTeamColors()).toBeNull();
+    });
+
+    it('restores saved colors', () => {
+        const [, navy] = Object.entries(config.teamColorPalette)[0];
+        const [, black] = Object.entries(config.teamColorPalette)[1];
+        saveTeamColors({ homeColor: navy, awayColor: black });
+
+        const loaded = loadTeamColors();
+        expect(loaded.homeColor).toBe(navy);
+        expect(loaded.awayColor).toBe(black);
+    });
+
+    it('does not collide with the Standard Game settings bucket', () => {
+        saveSettings({ quarterMode: 'plays' });
+        expect(loadTeamColors()).toBeNull();
+    });
+});
+
+describe('team colors validation', () => {
+    it('rejects a color not in the configured palette', () => {
+        const [, navy] = Object.entries(config.teamColorPalette)[0];
+        saveTeamColors({ homeColor: navy });
+        const raw = JSON.parse(localStorage.getItem('buzzbowl:settings:TeamColors'));
+        raw.homeColor = 0x123456;
+        localStorage.setItem('buzzbowl:settings:TeamColors', JSON.stringify(raw));
+
+        expect(loadTeamColors()).toBeNull();
+    });
+
+    it('rejects corrupt JSON without throwing', () => {
+        localStorage.setItem('buzzbowl:settings:TeamColors', '{not json');
+        expect(loadTeamColors()).toBeNull();
     });
 });
