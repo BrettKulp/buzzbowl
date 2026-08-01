@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The pre-commit hook now blocks commits that stage `src/game/config.json` with
+  `debug.enabled: true` (`scripts/check-debug-disabled.mjs`). It inspects the staged copy of
+  the file, so local debugging with logging on stays unblocked as long as the file isn't
+  staged.
+
 ### Fixed
 
 - A completed pass to a receiver who was already touching a defender or the sideline no
