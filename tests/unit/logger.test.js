@@ -25,7 +25,7 @@ describe('logger gating', () => {
         vi.restoreAllMocks();
     });
 
-    it('error() still emits when debug is disabled', async () => {
+    it('error() and warn() still emit when debug is disabled', async () => {
         mockConfig.debug = { enabled: false, categories: {} };
         const logger = await importLogger();
 
@@ -33,10 +33,12 @@ describe('logger gating', () => {
         expect(consoleError).toHaveBeenCalledTimes(1);
         expect(consoleError).toHaveBeenCalledWith('[ERROR]', 'boom');
 
-        logger.log('play', 'snap');
         logger.warn('careful');
+        expect(consoleWarn).toHaveBeenCalledTimes(1);
+        expect(consoleWarn).toHaveBeenCalledWith('[WARN]', 'careful');
+
+        logger.log('play', 'snap');
         expect(consoleLog).not.toHaveBeenCalled();
-        expect(consoleWarn).not.toHaveBeenCalled();
     });
 
     it('a category set to false stays silent while its neighbor logs', async () => {
