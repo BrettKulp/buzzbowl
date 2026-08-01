@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Changed the Vite `base` from `/buzzbowl/` to `/` so the Firebase deploy at `buzzbowl.org`
-  matches the paths emitted in `index.html`. The previous deploy placed `dist` at the site
-  root while `index.html` referenced `/buzzbowl/assets/*`, so asset requests were caught by
-  the SPA rewrite and returned `index.html` (`text/html`), breaking module script loading.
+- Changed the Vite `base` to `./` (relative) so the same build serves correctly from any
+  subpath: `buzzbowl.org/` (Firebase deploy at the site root) and the GitHub Pages test site at
+  `brettkulp.github.io/buzzbowl/`. The previous deploy placed `dist` at the site root while
+  `index.html` referenced absolute `/buzzbowl/assets/*`, so asset requests were caught by the
+  SPA rewrite and returned `index.html` (`text/html`), breaking module script loading.
 - Updated `firebase.json` caching so `index.html` is served with `no-cache` while hashed JS/CSS
   assets use long-lived immutable caching. Previously `index.html` was cached for an hour, so
   after a deploy a stale cached page could request an old hashed bundle that no longer existed,
