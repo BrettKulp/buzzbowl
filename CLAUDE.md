@@ -55,5 +55,6 @@ implementation — see the rejected-tests list in the suite's own comments.
   call sites stay on `this.game.<method>()` (e.g. `changeformation()` at line 942).
 - Use the `helpers.js` accessors (`getAllPlayers`, `deselectAllPlayers`, `yardsToPixels` — 13.2 px
   per yard) rather than reaching into `game.home.children.entries`.
-- Use `log`/`warn`/`error` from `logger.js` over bare `console.*`; `log` and `warn` are gated by
-  `config.debug`.
+- Use `log`/`warn`/`error` from `logger.js` over bare `console.*`. `log` is gated by
+  `debug.enabled` and per-category toggles under `debug.categories` in `config.json`; `warn`
+  and `error` always log. Unknown categories are off by default.

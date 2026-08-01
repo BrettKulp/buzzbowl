@@ -25,10 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Reworked debug logging: `log`, `warn`, and `error` are all now gated by `debug.enabled` in
-  `config.json` and emit a `[DEBUG:<category>]` prefix, and each log category
-  (`collision`, `collisionWithBallCarrier`, `play`, `stuck`, `player`, `error`, `warn`) can be
-  toggled individually under `debug.categories`. Log arguments are lazily evaluated (pass a
+- Reworked debug logging: `log` is gated by `debug.enabled` in
+  `config.json` and emits a `[DEBUG:<category>]` prefix, and each log category
+  (`collision`, `collisionWithBallCarrier`, `play`, `stuck`, `player`) can be
+  toggled individually under `debug.categories`; `warn` and `error` always log
+  (tagged `[WARN]`/`[ERROR]`) regardless of the switch. Log arguments are lazily evaluated (pass a
   thunk) so disabled logs cost nothing. Raw `console.log`/`console.debug` calls in
   `PlayStateManager` and `BaseGameScene` were routed through the logger,
   `Player.logPlayer()` was condensed to a single line, a general `collision` log was added
@@ -42,6 +43,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `error()` from `logger.js` no longer disappears in a default build: it is now unconditional
+  (always routed to `console.error`) instead of being gated by `debug.enabled`, so formation and
+  Matter-body failures stay visible to consoles and to the e2e error guard rail. The dead
+  `error` entry was removed from `debug.categories`, and unknown log categories now default to
+  off rather than on, so a typo'd category stays quiet.
+- `warn()` from `logger.js` no longer disappears in a default build either: it is now
+  unconditional (always routed to `console.warn`) instead of being gated by `debug.enabled`,
+  so save-game and settings read/write failures stay visible to players. The dead `warn`
+  entry was removed from `debug.categories`.
+- `error()` and `warn()` no longer take a category argument (every call site was passing their
+  own level name, which carried no information): `error` tags itself `[ERROR]` and `warn` tags
+  itself `[WARN]`. Only `log()` keeps a caller-chosen category.
+- In `BaseGameScene`, the `describeCollider` helper was hoisted out of the per-pair collision
+  loop (it was being reallocated every pair every frame), the `elapsedMs` collision-detail
+  argument is now computed lazily inside the log thunk, a redundant `!otherPlayer?.team` check
+  was dropped (the `!==` comparison already covers it), and leftover indentation left after the
+  per-player `updateTargetCircle` log removal was cleaned up.
 - Fixed a syntax error in the stuck-ball-carrier check (unclosed paren, undefined `game`
   reference). The QB holding the ball on a Pass play is now exempt from the stuck-motionless and
   stuck-backward checks so he can drop back and scramble without triggering a false tackle.
@@ -101,6 +119,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   past what actually fits above the fold.
 ### Added
 
+- `tests/unit/logger.test.js` covering the debug-logger contract: `error()` emits when
+  `debug.enabled` is false while `log`/`warn` stay silent, a per-category toggle silences only
+  its own category, and unknown categories default to off.
 - Rounded-corner players (both ends) with two thin white stripes on the front edge to visually distinguish facing direction at a glance.
 - Console logging (unconditional) around the play lifecycle — snap, tackles, down/first-down/turnover resolution, and possession changes are tagged `[DEBUG]` via `console.log`; the high-volume per-collision trace is tagged `[DEBUG:collision]` via `console.debug` so it can be filtered out (or hidden by turning off "Verbose" in the browser console) without losing the rest — to help diagnose in-game rules bugs going forward.
 - Save game progress to `localStorage` so a Standard Game survives a page refresh. A "Resume

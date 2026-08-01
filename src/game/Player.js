@@ -105,7 +105,7 @@ export class Player extends Phaser.GameObjects.Graphics {
                 this.scene.matter.body.setAngularVelocity(this.body, 0);
                 this.scene.matter.body.setStatic(this.body, true);
             } catch (e) {
-                error("error", "Error stopping player:", e);
+                error("Error stopping player:", e);
             }
         }
     }
@@ -115,7 +115,7 @@ export class Player extends Phaser.GameObjects.Graphics {
             try {
                 this.scene.matter.body.setStatic(this.body, false);
             } catch (e) {
-                error("error", "Error making player dynamic:", e);
+                error("Error making player dynamic:", e);
             }
         }
     }
@@ -173,7 +173,7 @@ export class Player extends Phaser.GameObjects.Graphics {
                 this.scene.matter.body.setPosition(this.body, { x: targetX, y: targetY });
             }
         } catch (e) {
-            error("error", "Error resetting player state:", e);
+            error("Error resetting player state:", e);
         }
     }
 
