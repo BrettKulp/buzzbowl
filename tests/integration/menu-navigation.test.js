@@ -358,6 +358,27 @@ describe('team colors', () => {
         expect(standardGame.awayColor).toBe(FOURTH_COLOR);
     });
 
+    // Play review repaints players through Player.setHasBall(), whose only caller is
+    // applyRecordedFrame() inside Player itself -- which makes it read as dead code from a
+    // grep. It isn't, and it has to read the scene's team colors: replaying a hand-off must
+    // restore the user's chosen color, not the config.json default.
+    it('repaints replayed players in the saved team colors, not the config defaults', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        saveTeamColors({ homeColor: THIRD_COLOR, awayColor: FOURTH_COLOR });
+
+        const created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        const carrier = getHomePlayers(standardGame).find((p) => p.hasBall);
+        carrier.applyRecordedFrame({ x: carrier.x, y: carrier.y, angle: 0, hasBall: false });
+
+        expect(carrier.fillColor).toBe(THIRD_COLOR);
+        expect(carrier.fillColor).not.toBe(config.colors.home);
+    });
+
     // Both teams sharing a color leaves 22 identically-colored players and two matching
     // scoreboard swatches -- an unplayable board reachable from the defaults in a single click,
     // since Navy is immediately followed by Black in the palette.

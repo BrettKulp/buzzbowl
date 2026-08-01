@@ -72,6 +72,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Save game progress to `localStorage` so a Standard Game survives a page refresh. A "Resume
   Game" button appears on the main menu whenever a save exists; starting a fresh Standard Game
   or Free Play, or finishing all four quarters, leaves no stale save behind.
+- Play review: a "Review Play" button next to the Menu button lights up once a play ends.
+  Drag the timeline scrubber above the field, or step through in eighths with the arrow
+  buttons, to watch all 22 players retrace their exact recorded path — including any
+  mid-play possession change. The button becomes "Resume" while reviewing and puts everyone
+  back on their end-of-play spot. Recording runs to the true end of the play rather than the
+  whistle, so a touchdown replay includes the run on into the endzone during the celebration
+  window, and Review Play only lights up once everything has actually stopped moving.
+  Recording is capped at 1800 frames (~30s at 60fps, about 3KB/frame) per play, so a play
+  that never draws a tackle can't grow unbounded.
 - "Preferences" screen, reached by its own button at the bottom of the main menu, for the
   Standard Game quarter mode (time vs. play count) and the stuck-ball-carrier house rule
   settings below. Every change is written to `localStorage` immediately as it's made — there is
@@ -104,9 +113,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Dead `Player` methods `setHasBall()`, `resetColor()` and `setTeamColor()`. All three had no
-  callers anywhere — the live code sets `player.hasBall` and `player.fillColor` directly — so
-  they were quietly diverging from the paths that actually run.
+- Dead `Player` methods `resetColor()` and `setTeamColor()`. Neither had any callers — the live
+  code sets `player.hasBall` and `player.fillColor` directly — so they were quietly diverging
+  from the paths that actually run. `setHasBall()` is kept: play review's `applyRecordedFrame()`
+  calls it, and it now reads the scene's team colors so a replayed hand-off repaints in the
+  chosen color rather than the `config.json` default.
 
 ### Fixed
 

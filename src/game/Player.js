@@ -195,6 +195,26 @@ export class Player extends Phaser.GameObjects.Graphics {
         }
     }
 
+    // setPosition/setRotation come from Matter's Transform component (every Player gets a
+    // body in the constructor), so these write straight through to the physics body.
+    applyRecordedFrame({ x, y, angle, hasBall }) {
+        this.setPosition(x, y);
+        this.setRotation(angle);
+        this.currentAngle = angle;
+        if (hasBall !== this.hasBall) this.setHasBall(hasBall);
+    }
+
+    // Reads the scene's team colors rather than config.colors directly, so handing the ball off
+    // mid-replay repaints the player in the user's chosen team color, not the config default.
+    setHasBall(hasBall) {
+        this.hasBall = hasBall;
+        if (hasBall) {
+            this.fillColor = gameConfig.colors.ballCarrier;
+        } else {
+            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
+        }
+    }
+
     updateVeer(dt, params) {
         if (!this.body || !this.active) return null;
 
