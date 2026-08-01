@@ -2,7 +2,7 @@
   "debug": {
     "enabled": false,
     "categories": {
-      "collision": false,
+      "collision": true,
       "collisionWithBallCarrier": true,
       "play": true,
       "stuck": true,

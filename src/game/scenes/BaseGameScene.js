@@ -604,78 +604,88 @@ export class BaseGameScene extends Scene {
             this
         );
 
-        this.matter.world.on('collisionstart', (event) => {
-            if (!this.playStarted) {
-                return;
-            }
-
-            for (let i = 0; i < event.pairs.length; i++) {
-                const bodyA = event.pairs[i].bodyA;
-                const bodyB = event.pairs[i].bodyB;
-
-                const gameObjectA = bodyA.gameObject;
-                const gameObjectB = bodyB.gameObject;
-
-                if ((!gameObjectA && !gameObjectB) || gameObjectA?.disabled === true || gameObjectB?.disabled === true) {
-                    continue;
-                }
-
-                const describeCollider = (obj, body) =>
-                    obj ? (obj.entityType || obj.name || obj.constructor?.name || "unknown") : (body?.label || "unknown");
-
-                log("collision", () =>
-                    `collision: A=${describeCollider(gameObjectA, bodyA)} B=${describeCollider(gameObjectB, bodyB)}`
-                );
-
-                let ballCarrier = null;
-                let otherPlayer = null;
-
-                if (gameObjectA?.hasBall === true) {
-                    ballCarrier = gameObjectA;
-                    otherPlayer = gameObjectB;
-                } else if (gameObjectB?.hasBall === true) {
-                    ballCarrier = gameObjectB;
-                    otherPlayer = gameObjectA;
-                } else {
-                    continue;
-                }
-
-                if (!otherPlayer?.team || otherPlayer.team !== ballCarrier.team) {
-                    const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
-                    log("collisionWithBallCarrier", () =>
-                        `collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
-                        `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
-                    );
-                }
-
-                if (otherPlayer?.entityType === 'SideLine') {
-                    this.handleTackle(ballCarrier, otherPlayer, "SideLine");
-                    break;
-                }
-
-                if (otherPlayer?.entityType === 'EndZone' &&
-                    ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
-                        (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
-                    this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
-                    this.nextPlayButton.enable();
-                    break;
-                }
-
-                if (
-                    otherPlayer?.team &&
-                    ballCarrier.team !== otherPlayer.team
-                ) {
-                    this.handleTackle(ballCarrier, otherPlayer);
-                    break;
-                }
-            }
-        });
+        // collisionstart fires when collision begins
+        // collisionactive fires continously while the collision is happening
+        // without collisionactive when a reciever revievs a pass while a collision is active
+        // the would not be downed
+        this.matter.world.on('collisionstart', (event) => this.handleCollisionPairs(event));
+        this.matter.world.on('collisionactive', (event) => this.handleCollisionPairs(event));
 
         this.events.on("shutdown", () => {
             this.input.off("dragstart");
             this.input.off("drag");
             this.input.off("dragend");
         });
+    }
+
+    handleCollisionPairs(event) {
+        // scored guard: the play keeps simulating through the touchdown celebration window
+        // with the carrier still inside the endzone sensor, and collisionactive would
+        // otherwise re-fire the touchdown (and re-award the points) every tick.
+        if (!this.playStarted || this.scored) {
+            return;
+        }
+
+        for (let i = 0; i < event.pairs.length; i++) {
+            const bodyA = event.pairs[i].bodyA;
+            const bodyB = event.pairs[i].bodyB;
+
+            const gameObjectA = bodyA.gameObject;
+            const gameObjectB = bodyB.gameObject;
+
+            if ((!gameObjectA && !gameObjectB) || gameObjectA?.disabled === true || gameObjectB?.disabled === true) {
+                continue;
+            }
+
+            const describeCollider = (obj, body) =>
+                obj ? (obj.entityType || obj.name || obj.constructor?.name || "unknown") : (body?.label || "unknown");
+
+            log("collision", () =>
+                `collision: A=${describeCollider(gameObjectA, bodyA)} B=${describeCollider(gameObjectB, bodyB)}`
+            );
+
+            let ballCarrier = null;
+            let otherPlayer = null;
+
+            if (gameObjectA?.hasBall === true) {
+                ballCarrier = gameObjectA;
+                otherPlayer = gameObjectB;
+            } else if (gameObjectB?.hasBall === true) {
+                ballCarrier = gameObjectB;
+                otherPlayer = gameObjectA;
+            } else {
+                continue;
+            }
+
+            if (!otherPlayer?.team || otherPlayer.team !== ballCarrier.team) {
+                const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
+                log("collisionWithBallCarrier", () =>
+                    `collision: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
+                    `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
+                );
+            }
+
+            if (otherPlayer?.entityType === 'SideLine') {
+                this.handleTackle(ballCarrier, otherPlayer, "SideLine");
+                break;
+            }
+
+            if (otherPlayer?.entityType === 'EndZone' &&
+                ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
+                    (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
+                this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
+                this.nextPlayButton.enable();
+                break;
+            }
+
+            if (
+                otherPlayer?.team &&
+                ballCarrier.team !== otherPlayer.team
+            ) {
+                this.handleTackle(ballCarrier, otherPlayer);
+                break;
+            }
+        }
     }
 
     createUI() {

@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A completed pass to a receiver who was already touching a defender or the sideline no
+  longer goes undetected: `collisionstart` only fires when a contact *begins*, and that pair's
+  original contact was skipped because neither body had the ball yet, so no tackle registered
+  until the bodies separated and re-collided. The collision pair logic was extracted into
+  `BaseGameScene.handleCollisionPairs` and is now also wired to Matter's `collisionactive`
+  event, which fires every tick for ongoing contacts. A `scored` guard prevents the touchdown
+  branch from re-firing (and re-awarding points) each tick during the celebration window.
+
 ### Changed
 
 - Reworked debug logging: `log`, `warn`, and `error` are all now gated by `debug.enabled` in
