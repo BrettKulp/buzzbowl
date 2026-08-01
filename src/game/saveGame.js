@@ -10,11 +10,15 @@ const KEYS = [
     "formation", "defensiveFormation", "playType",
     "quarter", "gameClock",
     "scored", "turnoverOnDowns",
+    "quarterMode", "quarterLength", "quarterPlayCount", "playsThisQuarter",
+    "stuckTimeoutEnabled", "stuckTimeoutSeconds",
+    "stuckBackwardEnabled", "stuckBackwardYards",
 ];
 
 const VALID = {
     possession: ["Home", "Away"],
     playType: ["Run", "Pass"],
+    quarterMode: ["time", "plays"],
 };
 
 const storageKey = (sceneKey) => `buzzbowl:save:${sceneKey}`;

@@ -78,6 +78,15 @@ export function makeFakeGame(overrides = {}) {
         lineOfScrimmage: { x: config.field.lineOfScrimmageX, previousX: null, marker: { updateX: vi.fn() } },
         firstDownMarker: { x: config.field.lineOfScrimmageX + 132, marker: { updateX: vi.fn() } },
 
+        time: { now: 0 },
+        stuckTimeoutEnabled: false,
+        stuckTimeoutSeconds: config.standardGame.stuckTimeout.default,
+        stuckBackwardEnabled: false,
+        stuckBackwardYards: config.standardGame.stuckBackwardDrift.default,
+        ballCarrierStillSince: null,
+        ballCarrierStillAtX: null,
+        ballCarrierFurthestX: null,
+
         startButton: { enable: vi.fn(), disable: vi.fn() },
         pauseButton: { enable: vi.fn(), disable: vi.fn() },
         nextPlayButton: { enable: vi.fn(), disable: vi.fn() },
@@ -94,6 +103,7 @@ export function makeFakeGame(overrides = {}) {
         showDownUI: vi.fn(),
         playRecorder: { start: vi.fn(), stop: vi.fn() },
         endPlayRecording: vi.fn(),
+        handleTackle: vi.fn(),
 
         ...rest,
     };

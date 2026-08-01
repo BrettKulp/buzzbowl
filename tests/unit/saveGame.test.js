@@ -78,6 +78,41 @@ describe('saveGame round-trip', () => {
         expect(restored.quarter).toBe(3);
         expect(restored.gameClock).toBe(42.5);
     });
+
+    it('saves and restores the standardGame settings and play-count state', () => {
+        const scene = makeFakeScene({
+            quarterMode: 'plays', quarterLength: 90, quarterPlayCount: 8, playsThisQuarter: 5,
+            stuckTimeoutEnabled: false, stuckTimeoutSeconds: 10,
+            stuckBackwardEnabled: true, stuckBackwardYards: 8,
+        });
+        saveGame(scene);
+
+        const restored = makeFakeScene();
+        loadGame(restored);
+        expect(restored.quarterMode).toBe('plays');
+        expect(restored.quarterLength).toBe(90);
+        expect(restored.quarterPlayCount).toBe(8);
+        expect(restored.playsThisQuarter).toBe(5);
+        expect(restored.stuckTimeoutEnabled).toBe(false);
+        expect(restored.stuckTimeoutSeconds).toBe(10);
+        expect(restored.stuckBackwardEnabled).toBe(true);
+        expect(restored.stuckBackwardYards).toBe(8);
+    });
+
+    it('round-trips a save from before this feature existed, missing the new keys, without throwing', () => {
+        const scene = makeFakeScene({ quarter: 2, gameClock: 60 });
+        saveGame(scene);
+
+        const raw = JSON.parse(localStorage.getItem('buzzbowl:save:StandardGame'));
+        expect('quarterMode' in raw).toBe(false);
+
+        const restored = makeFakeScene({
+            quarterMode: 'time', quarterLength: 120, quarterPlayCount: 10, playsThisQuarter: 0,
+        });
+        expect(() => loadGame(restored)).not.toThrow();
+        expect(restored.quarterMode).toBe('time');
+        expect(restored.quarterLength).toBe(120);
+    });
 });
 
 describe('saveGame validation', () => {
@@ -101,6 +136,16 @@ describe('saveGame validation', () => {
         saveGame(makeFakeScene({ formation: 'Gun' }));
         const raw = JSON.parse(localStorage.getItem('buzzbowl:save:StandardGame'));
         raw.formation = 'NotARealFormation';
+        localStorage.setItem('buzzbowl:save:StandardGame', JSON.stringify(raw));
+
+        expect(hasSave('StandardGame')).toBe(false);
+        expect(loadGame(makeFakeScene())).toBe(false);
+    });
+
+    it('rejects a quarterMode value outside time/plays', () => {
+        saveGame(makeFakeScene({ quarterMode: 'time' }));
+        const raw = JSON.parse(localStorage.getItem('buzzbowl:save:StandardGame'));
+        raw.quarterMode = 'NotARealMode';
         localStorage.setItem('buzzbowl:save:StandardGame', JSON.stringify(raw));
 
         expect(hasSave('StandardGame')).toBe(false);

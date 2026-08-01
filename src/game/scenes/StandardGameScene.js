@@ -2,10 +2,19 @@ import { BaseGameScene } from "./BaseGameScene";
 import config from "../configLoader.js";
 import { yardsToPixels } from "../helpers";
 import { clearSave } from "../saveGame";
+import { loadSettings } from "../gameSettings.js";
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
-        this.quarterLength = 120; // seconds
+        const sg = config.standardGame;
+        this.quarterMode = sg.quarterMode;
+        this.quarterLength = sg.quarterLengthSeconds.default; // seconds
+        this.quarterPlayCount = sg.quarterPlayCount.default;
+        this.stuckTimeoutEnabled = sg.stuckTimeout.enabledByDefault;
+        this.stuckTimeoutSeconds = sg.stuckTimeout.default;
+        this.stuckBackwardEnabled = sg.stuckBackwardDrift.enabledByDefault;
+        this.stuckBackwardYards = sg.stuckBackwardDrift.default;
+        this.playsThisQuarter = 0;
         this.clockText = null;
         this.quarterText = null;
     }
@@ -14,7 +23,17 @@ export class StandardGameScene extends BaseGameScene {
         super.init(data);
         if (!data?.resume) {
             this.quarter = 1;
+            const s = loadSettings() ?? {};
+            const sg = config.standardGame;
+            this.quarterMode = s.quarterMode ?? sg.quarterMode;
+            this.quarterLength = s.quarterLength ?? sg.quarterLengthSeconds.default;
+            this.quarterPlayCount = s.quarterPlayCount ?? sg.quarterPlayCount.default;
+            this.stuckTimeoutEnabled = s.stuckTimeoutEnabled ?? sg.stuckTimeout.enabledByDefault;
+            this.stuckTimeoutSeconds = s.stuckTimeoutSeconds ?? sg.stuckTimeout.default;
+            this.stuckBackwardEnabled = s.stuckBackwardEnabled ?? sg.stuckBackwardDrift.enabledByDefault;
+            this.stuckBackwardYards = s.stuckBackwardYards ?? sg.stuckBackwardDrift.default;
             this.gameClock = this.quarterLength;
+            this.playsThisQuarter = 0;
         }
         this.clockRunning = false;
         this.halftime = false;
@@ -30,12 +49,17 @@ export class StandardGameScene extends BaseGameScene {
 
         this.clockText = this.add.text(
             this.canvasWidth / 2, 60,
-            this.formatTime(this.gameClock),
+            this.quarterMode === "time" ? this.formatTime(this.gameClock) : this.formatPlayCount(),
             { fontSize: "40px", fill: "#fff", fontStyle: "bold" }
         ).setOrigin(0.5);
     }
 
+    formatPlayCount() {
+        return `Play ${this.playsThisQuarter}/${this.quarterPlayCount}`;
+    }
+
     updateMode(time, delta) {
+        if (this.quarterMode !== "time") return;
         if (!this.clockRunning || !this.playStarted) return;
 
         this.gameClock -= delta / 1000;
@@ -70,7 +94,15 @@ export class StandardGameScene extends BaseGameScene {
 
     startPlay() {
         super.startPlay();
-        this.clockRunning = true;
+        if (this.quarterMode === "time") {
+            this.clockRunning = true;
+        } else {
+            this.playsThisQuarter++;
+            this.clockText.setText(this.formatPlayCount());
+            if (this.playsThisQuarter >= this.quarterPlayCount) {
+                this.endQuarterAfterPlay = true;
+            }
+        }
     }
 
     pausePlay(ballCarrierDown) {
@@ -116,8 +148,9 @@ export class StandardGameScene extends BaseGameScene {
         }
 
         this.gameClock = this.quarterLength;
+        this.playsThisQuarter = 0;
         this.quarterText.setText(`Q${this.quarter}`);
-        this.clockText.setText(this.formatTime(this.gameClock));
+        this.clockText.setText(this.quarterMode === "time" ? this.formatTime(this.gameClock) : this.formatPlayCount());
     }
   
     swapTeamDirection({ team, direction, startLOS } = {}) {
