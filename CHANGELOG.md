@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PlayStateManager` and `BaseGameScene` were routed through the logger,
   `Player.logPlayer()` was condensed to a single line, a general `collision` log was added
   alongside the ball-carrier collision detail, and per-frame/verbose logs (per-click player
-  dumps, the crossed-LOS enforcement log, and the per-player `updateTargetCircle` dump) were
-  removed.
+  dumps and the per-player `updateTargetCircle` dump) were removed.
+- The LOS enforcement log is back as a `los` debug category so it can be toggled from
+  `debug.categories` in `config.json`.
 - The `collisionWithBallCarrier` debug log now skips collisions with same-team players, and
   `PlayStateManager.handleTackle` no longer throws when the "tackler" is an EndZone or SideLine
   entity (they have no `logPlayer` method).

@@ -846,6 +846,9 @@ export class BaseGameScene extends Scene {
                 }
 
                 if (crossed) {
+                    log("los", () =>
+                        `Player ${player.id} (${player.team}) pushed back from x=${player.x.toFixed(1)} to x=${newX.toFixed(1)} | LOS x=${losX}`
+                    );
                     player.x = newX;
                     if (player.body) {
                         this.matter.body.setPosition(player.body, { x: newX, y: player.y });
