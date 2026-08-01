@@ -48,12 +48,36 @@ test('starts a standard game from the menu', async ({ page }) => {
     const menuFrame = await canvas.screenshot();
 
     // Scale.FIT sizes the canvas element to the game's 1600x900 space, so the element
-    // centre is the "Standard Game" button at (800, 450).
+    // centre is the "Standard Game" button at (800, 450). It starts the game directly --
+    // quarter/house-rule settings come from whatever's saved in Preferences, not a per-game
+    // config screen.
     await canvas.click();
     await page.waitForTimeout(1500);
 
     const gameFrame = await canvas.screenshot();
     expect(gameFrame.equals(menuFrame)).toBe(false);
+    expect(errors).toEqual([]);
+});
+
+test('opens Preferences from the main menu and returns', async ({ page }) => {
+    const { canvas, errors } = await openMenu(page);
+    const menuFrame = await canvas.screenshot();
+
+    const box = await canvas.boundingBox();
+    const atGameCoords = (x, y) => ({
+        x: (x / 1600) * box.width,
+        y: (y / 900) * box.height,
+    });
+
+    await canvas.click({ position: atGameCoords(800, 840) }); // Preferences
+    await page.waitForTimeout(1000);
+    const preferencesFrame = await canvas.screenshot();
+    expect(preferencesFrame.equals(menuFrame)).toBe(false);
+
+    await canvas.click({ position: atGameCoords(1500, 40) }); // Menu (back)
+    await page.waitForTimeout(1000);
+    const backAtMenuFrame = await canvas.screenshot();
+    expect(backAtMenuFrame.equals(preferencesFrame)).toBe(false);
     expect(errors).toEqual([]);
 });
 

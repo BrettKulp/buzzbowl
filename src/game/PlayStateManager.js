@@ -1,5 +1,5 @@
 import config from "./configLoader.js";
-import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
+import { yardsToPixels, pixelsToYards, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
 import { log } from "./logger";
 
 export class PlayStateManager {
@@ -19,6 +19,9 @@ export class PlayStateManager {
         this.game.snapAt = this.game.time.now;
 
         const snapBallCarrier = getAllPlayers(this.game).find(p => p.hasBall);
+        this.game.ballCarrierStillSince = this.game.time.now;
+        this.game.ballCarrierStillAtX = snapBallCarrier ? snapBallCarrier.x : null;
+        this.game.ballCarrierFurthestX = snapBallCarrier ? snapBallCarrier.x : null;
         console.log(
             `[DEBUG] startPlay: possession=${this.game.possession} down=${this.game.down} ` +
             `LOS=${this.game.lineOfScrimmage.x.toFixed(1)} playType=${this.game.playType} ` +
@@ -178,6 +181,58 @@ export class PlayStateManager {
             this.handleTouchdown();
         } else {
             this.handleNonTouchdown(tackleX, type);
+        }
+    }
+
+    checkBallCarrierMotion(ballCarrier) {
+        if ((!this.game.stuckTimeoutEnabled && !this.game.stuckBackwardEnabled) ||
+            (ballCarrier.offensivePosition === "QB" && ballCarrier.teamHasPossession(this.game) && this.game.playType === "Pass")) {
+            return;
+        }
+
+        this.checkStuckMotionless(ballCarrier);
+        this.checkStuckBackwards(ballCarrier);
+    }
+
+    checkStuckMotionless(ballCarrier) {
+        if (!this.game.stuckTimeoutEnabled) return;
+
+        const now = this.game.time.now;
+        const x = ballCarrier.x;
+        const epsilon = config.standardGame.stuckMotionEpsilonPixels;
+
+        // Anchor-based jitter guard: compare against the position recorded when the
+        // still-timer was last reset, not the previous tick. Comparing tick-to-tick would let
+        // slow, real creep (sub-epsilon each frame, real movement over a second) never reset
+        // the timer.
+        if (this.game.ballCarrierStillAtX == null || Math.abs(x - this.game.ballCarrierStillAtX) > epsilon) {
+            this.game.ballCarrierStillSince = now;
+            this.game.ballCarrierStillAtX = x;
+        }
+
+        const motionlessMs = now - this.game.ballCarrierStillSince;
+        if (motionlessMs >= this.game.stuckTimeoutSeconds * 1000) {
+            log(`[Stuck] motionless ${(motionlessMs / 1000).toFixed(1)}s at x=${x.toFixed(1)}`);
+            this.game.handleTackle(ballCarrier, null, "Stuck");
+        }
+    }
+
+    checkStuckBackwards(ballCarrier) {
+        if (!this.game.stuckBackwardEnabled) return;
+
+        const x = ballCarrier.x;
+        const movingRight = this.game.targetEndzone === "Right";
+        if (this.game.ballCarrierFurthestX == null ||
+            (movingRight ? x > this.game.ballCarrierFurthestX : x < this.game.ballCarrierFurthestX)) {
+            this.game.ballCarrierFurthestX = x;
+        }
+
+        const backwardPx = movingRight
+            ? this.game.ballCarrierFurthestX - x
+            : x - this.game.ballCarrierFurthestX;
+        if (backwardPx >= yardsToPixels(this.game.stuckBackwardYards)) {
+            log(`[Stuck] drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
+            this.game.handleTackle(ballCarrier, null, "Stuck");
         }
     }
 

@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { PlayStateManager } from '../../src/game/PlayStateManager.js';
 import { makeFakeGame } from '../fakes/makeFakeGame.js';
+import { yardsToPixels } from '../../src/game/helpers.js';
+import config from '../../src/game/configLoader.js';
 
 function setup(overrides) {
     const game = makeFakeGame(overrides);
@@ -141,3 +143,146 @@ describe('possession changes', () => {
 function losAt(x) {
     return { x, previousX: null, marker: { updateX: vi.fn() } };
 }
+
+describe('stuck ball carrier', () => {
+    const epsilon = config.standardGame.stuckMotionEpsilonPixels;
+
+    it('does nothing when both conditions are disabled', () => {
+        const { game, plays } = setup({ stuckTimeoutEnabled: false, stuckBackwardEnabled: false });
+
+        plays.checkBallCarrierMotion({ x: 600 });
+        game.time.now = 100000;
+        plays.checkBallCarrierMotion({ x: 600 });
+
+        expect(game.handleTackle).not.toHaveBeenCalled();
+    });
+
+    describe('motionless timeout', () => {
+        it('ends the play once the configured seconds elapse without movement', () => {
+            const { game, plays } = setup({ stuckTimeoutEnabled: true, stuckTimeoutSeconds: 6 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            game.time.now = 5999;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            game.time.now = 6000;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+
+        it('resets the timer once the carrier actually moves', () => {
+            const { game, plays } = setup({ stuckTimeoutEnabled: true, stuckTimeoutSeconds: 6 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            game.time.now = 5000;
+            carrier.x = 650;
+            plays.checkBallCarrierMotion(carrier);
+
+            game.time.now = 5000 + 5999;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            game.time.now = 5000 + 6000;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+
+        it('does not reset the timer for jitter within the epsilon', () => {
+            const { game, plays } = setup({ stuckTimeoutEnabled: true, stuckTimeoutSeconds: 6 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            game.time.now = 3000;
+            carrier.x = 600 + epsilon; // diff === epsilon, not > epsilon: should not reset
+            plays.checkBallCarrierMotion(carrier);
+
+            game.time.now = 6000;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+
+        // Regression test: comparing each tick only to the immediately preceding tick would let
+        // slow, real creep (sub-epsilon each step) never reset the timer, since no single step
+        // ever exceeds epsilon. Comparing against the anchor set when the timer was last reset
+        // catches the cumulative drift instead.
+        it('resets the timer once cumulative creep exceeds epsilon, even though each step is sub-epsilon', () => {
+            const { game, plays } = setup({ stuckTimeoutEnabled: true, stuckTimeoutSeconds: 6 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            for (let i = 1; i <= epsilon + 1; i++) {
+                game.time.now = i * 1000;
+                carrier.x = 600 + i;
+                plays.checkBallCarrierMotion(carrier);
+            }
+
+            expect(game.ballCarrierStillAtX).toBe(600 + epsilon + 1);
+            expect(game.ballCarrierStillSince).toBe((epsilon + 1) * 1000);
+
+            game.time.now = (epsilon + 1) * 1000 + 5999;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            game.time.now = (epsilon + 1) * 1000 + 6000;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+    });
+
+    describe('backward drift', () => {
+        it('ends the play once the carrier drifts back past the configured yards, moving Right', () => {
+            const { game, plays } = setup({ targetEndzone: 'Right', stuckBackwardEnabled: true, stuckBackwardYards: 5 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            carrier.x = 650; // advances the furthest point reached
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            const thresholdPx = yardsToPixels(5);
+            carrier.x = 650 - thresholdPx + 1; // one px short of the threshold
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            carrier.x = 650 - thresholdPx; // exactly at the threshold
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+
+        it('ends the play once the carrier drifts back past the configured yards, moving Left', () => {
+            const { game, plays } = setup({ targetEndzone: 'Left', stuckBackwardEnabled: true, stuckBackwardYards: 5 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            carrier.x = 550; // advances the furthest point reached (Left drives x down)
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            const thresholdPx = yardsToPixels(5);
+            carrier.x = 550 + thresholdPx - 1;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).not.toHaveBeenCalled();
+
+            carrier.x = 550 + thresholdPx;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.handleTackle).toHaveBeenCalledWith(carrier, null, 'Stuck');
+        });
+
+        it('does not reset the furthest point on backward movement', () => {
+            const { game, plays } = setup({ targetEndzone: 'Right', stuckBackwardEnabled: true, stuckBackwardYards: 5 });
+            const carrier = { x: 600 };
+            plays.checkBallCarrierMotion(carrier);
+
+            carrier.x = 650;
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.ballCarrierFurthestX).toBe(650);
+
+            carrier.x = 640; // a small step back, short of the threshold
+            plays.checkBallCarrierMotion(carrier);
+            expect(game.ballCarrierFurthestX).toBe(650);
+        });
+    });
+});

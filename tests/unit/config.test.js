@@ -74,6 +74,29 @@ describe('config.json formations', () => {
     });
 });
 
+describe('config.json standardGame bounds', () => {
+    // The config screen cycles these values by `step` between `min` and `max`; a bad bound
+    // would make the screen's default unreachable or its step a no-op.
+    const numericBounds = {
+        quarterLengthSeconds: config.standardGame.quarterLengthSeconds,
+        quarterPlayCount: config.standardGame.quarterPlayCount,
+        stuckTimeout: config.standardGame.stuckTimeout,
+        stuckBackwardDrift: config.standardGame.stuckBackwardDrift,
+    };
+
+    it('keeps default within [min, max] and step positive for every tunable setting', () => {
+        for (const [name, bounds] of Object.entries(numericBounds)) {
+            expect(bounds.default, `${name}.default`).toBeGreaterThanOrEqual(bounds.min);
+            expect(bounds.default, `${name}.default`).toBeLessThanOrEqual(bounds.max);
+            expect(bounds.step, `${name}.step`).toBeGreaterThan(0);
+        }
+    });
+
+    it('sets a valid initial quarterMode', () => {
+        expect(['time', 'plays']).toContain(config.standardGame.quarterMode);
+    });
+});
+
 describe('configLoader', () => {
     it('converts hex colors to integers without touching string arrays', () => {
         expect(config.colors.home).toBe(0x000088);

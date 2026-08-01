@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Phaser from 'phaser';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
-import { getAllPlayers, getHomePlayers, getAwayPlayers } from '../../src/game/helpers.js';
+import { getAllPlayers, getHomePlayers, getAwayPlayers, yardsToPixels } from '../../src/game/helpers.js';
 import { hasSave, loadGame } from '../../src/game/saveGame.js';
 
 let game;
@@ -69,6 +69,53 @@ describe('scene boot', () => {
 
         expect(scene.down).toBe(2);
         expect(scene.lineOfScrimmage.x).toBe(680);
+    });
+
+    // Same delegation convention as handleTackle above -- this proves checkBallCarrierMotion is
+    // wired from the scene through to the play state manager, not that the stuck rule itself
+    // is correct (the unit tests own that).
+    it('routes checkBallCarrierMotion through to the play state manager', () => {
+        scene.stuckTimeoutEnabled = true;
+        scene.stuckTimeoutSeconds = 6;
+        scene.stuckBackwardEnabled = false;
+        scene.lineOfScrimmage.x = 600;
+        scene.firstDownMarker.x = 900;
+
+        scene.startPlay();
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+        ballCarrier.x = 650;
+        scene.checkBallCarrierMotion(ballCarrier); // anchors the still-timer at x=650
+
+        scene.time.now += 6000;
+        scene.checkBallCarrierMotion(ballCarrier);
+
+        expect(scene.down).toBe(2);
+        expect(scene.lineOfScrimmage.x).toBe(680);
+    });
+});
+
+describe('stuck ball carrier via a real update() tick', () => {
+    it('ends the play once the carrier drifts back past the configured yards', () => {
+        scene.stuckTimeoutEnabled = false;
+        scene.stuckBackwardEnabled = true;
+        scene.stuckBackwardYards = 5;
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.lineOfScrimmage.x = 600;
+        scene.firstDownMarker.x = 900;
+
+        scene.startPlay();
+        const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
+
+        ballCarrier.x = 650;
+        scene.update(0, 16);
+        expect(scene.scored).toBe(false);
+
+        const thresholdPx = yardsToPixels(5);
+        ballCarrier.x = 650 - thresholdPx;
+        scene.update(16, 16);
+
+        expect(scene.down).toBe(2);
     });
 });
 
@@ -283,5 +330,33 @@ describe('end of quarter', () => {
         expect(scene.quarterText.text).toBe('FINAL');
         // The clock must not roll over into a fifth quarter.
         expect(scene.quarter).toBe(4);
+    });
+});
+
+describe('quarter modes', () => {
+    it('ends the quarter after the configured number of plays, not by the clock', () => {
+        scene.quarterMode = 'plays';
+        scene.quarterPlayCount = 3;
+        scene.playsThisQuarter = 0;
+        scene.quarter = 1;
+        scene.stuckTimeoutEnabled = false;
+        scene.stuckBackwardEnabled = false;
+        const clockAtStart = scene.gameClock;
+
+        scene.startPlay();
+        scene.update(0, 5000); // even with a play live, the clock must not move in play-count mode
+        expect(scene.gameClock).toBe(clockAtStart);
+        scene.nextPlay();
+        expect(scene.quarter).toBe(1);
+
+        scene.startPlay();
+        scene.nextPlay();
+        expect(scene.quarter).toBe(1);
+
+        scene.startPlay();
+        scene.nextPlay();
+        expect(scene.quarter).toBe(2);
+
+        expect(scene.gameClock).toBe(clockAtStart);
     });
 });
