@@ -37,7 +37,7 @@ export function saveSettings(settings) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-        warn("Could not save settings:", e);
+        warn("warn", "Could not save settings:", e);
     }
 }
 
@@ -48,7 +48,7 @@ export function loadSettings() {
         const data = JSON.parse(raw);
         return isValid(data) ? data : null;
     } catch (e) {
-        warn("Ignoring unreadable settings:", e);
+        warn("warn", "Ignoring unreadable settings:", e);
         return null;
     }
 }

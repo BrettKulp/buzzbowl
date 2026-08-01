@@ -1,5 +1,17 @@
 {
-  "debug": false,
+  "debug": {
+    "enabled": false,
+    "categories": {
+      "collision": false,
+      "collisionWithBallCarrier": true,
+      "play": true,
+      "stuck": true,
+      "player": true,
+      "los": true,
+      "error": true,
+      "warn": true
+    }
+  },
   "colors": {
     "home": "#000088",
     "away": "#000000",
