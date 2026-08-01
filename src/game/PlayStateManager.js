@@ -17,6 +17,7 @@ export class PlayStateManager {
         this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
         this.game.passAttempted = false;
         this.game.snapAt = this.game.time.now;
+        this.game.playRecorder.start();
 
         const snapBallCarrier = getAllPlayers(this.game).find(p => p.hasBall);
         this.game.ballCarrierStillSince = this.game.time.now;
@@ -42,6 +43,14 @@ export class PlayStateManager {
     }
 
     pausePlay(ballCarrierDown) {
+        // Above the guard below: ballCarrierDown means the play is over, which is true even
+        // if it was already paused -- an incomplete pass can be thrown from a paused play,
+        // and leaving the recorder running there makes the next snap append to this play.
+        // A mid-play Pause passes no ballCarrierDown, so it keeps recording as intended.
+        if (ballCarrierDown) {
+            this.game.endPlayRecording();
+        }
+
         if (!this.game.playStarted) return;
 
         this.game.playStarted = false;
