@@ -78,7 +78,7 @@ export class BaseGameScene extends Scene {
         };
 
         this.scored = false;
-        this.framesAfterScore = 40;
+        this.framesAfterScore = 120;
         this.playType = "Run";
         this.defensiveFormation = "4-3";
         this.formation = "I";
@@ -635,8 +635,6 @@ export class BaseGameScene extends Scene {
                     log("touchdown in collission detectin with right endzone");
                     this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
                     this.nextPlayButton.enable();
-                    this.pausePlay(true);
-                    this.playStarted = false;
                     break;
                 }
 
@@ -832,9 +830,9 @@ export class BaseGameScene extends Scene {
         if (this.scored && this.framesAfterScore > 0) {
             this.framesAfterScore--;
             if (this.framesAfterScore < 1) {
-                this.pausePlay();
+                this.pausePlay(true);
+                return;
             }
-            return;
         }
 
         if (ballCarrier) {

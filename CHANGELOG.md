@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- After a touchdown, the game now keeps running (players moving, clock ticking) during the
+  celebration window instead of freezing; the pause now only triggers once the window ends.
+  The window was also extended from 40 frames (~0.7s) to 120 frames (2s). The Matter collision
+  handler no longer pauses the play immediately on the endzone hit.
 - Changed the Vite `base` to `./` (relative) so the same build serves correctly from any
   subpath: `buzzbowl.org/` (Firebase deploy at the site root) and the GitHub Pages test site at
   `brettkulp.github.io/buzzbowl/`. The previous deploy placed `dist` at the site root while

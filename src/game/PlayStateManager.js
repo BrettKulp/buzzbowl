@@ -268,6 +268,6 @@ export class PlayStateManager {
         this.game.playStarted = false;
         this.game.playPaused = false;
         this.game.playPausedBeforeSnap = true;
-        this.game.framesAfterScore = 40;
+        this.game.framesAfterScore = 120;
     }
 }
