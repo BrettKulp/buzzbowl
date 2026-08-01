@@ -5,7 +5,7 @@ const debugConfig = gameConfig.debug;
 const masterEnabled = typeof debugConfig === "object" ? debugConfig.enabled : debugConfig;
 
 const categoryEnabled = (name) =>
-    masterEnabled && (!debugConfig.categories || debugConfig.categories[name] !== false);
+    masterEnabled && debugConfig.categories?.[name] === true;
 
 const resolve = (args) => args.map((arg) => (typeof arg === "function" ? arg() : arg));
 
@@ -14,5 +14,7 @@ const makeLogger = (method) => (category, ...args) => {
 };
 
 export const log = makeLogger("log");
-export const warn = makeLogger("warn");
-export const error = makeLogger("error");
+export const warn = (...args) => {
+    if (categoryEnabled("warn")) console.warn("[WARN]", ...resolve(args));
+};
+export const error = (...args) => console.error("[ERROR]", ...resolve(args));

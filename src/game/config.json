@@ -8,7 +8,6 @@
       "stuck": true,
       "player": true,
       "los": true,
-      "error": true,
       "warn": true
     }
   },
