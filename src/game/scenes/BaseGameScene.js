@@ -243,14 +243,30 @@ export class BaseGameScene extends Scene {
         this.matter.add.gameObject(bottomBarrier, { isStatic: true, isSensor: false });
         this.fieldBarriers.push(bottomBarrier);
 
-        new EndZone(this, 79, this.fieldY + this.fieldHeight / 2, 130, this.fieldHeight + 30, {
-            stroke: true,
-            name: "LeftEndZone"
-        });
-        new EndZone(this, 1519, this.fieldY + this.fieldHeight / 2, 130, this.fieldHeight + 30, {
-            stroke: true,
-            name: "RightEndZone"
-        });
+        // Touchdown fires on body overlap, so it fires as soon as any part of the ball
+        // carrier crosses the goal line -- not when their center reaches it. Sensors sit
+        // with their goal-line edge exactly on the goal line, computed the same way for both
+        // ends so neither is offset relative to the other (the old hardcoded positions, 79
+        // and 1519, weren't: the left one sat 9px past its goal line, the right one only 1px
+        // off -- see issue #8).
+        const endZoneSensorWidth = 130;
+        this.leftGoalLineX = this.margin + endZoneWidth;
+        this.rightGoalLineX = this.margin + endZoneWidth + playableFieldWidth;
+
+        new EndZone(
+            this,
+            this.leftGoalLineX - endZoneSensorWidth / 2,
+            this.fieldY + this.fieldHeight / 2,
+            endZoneSensorWidth, this.fieldHeight + 30,
+            { stroke: true, name: "LeftEndZone" }
+        );
+        new EndZone(
+            this,
+            this.rightGoalLineX + endZoneSensorWidth / 2,
+            this.fieldY + this.fieldHeight / 2,
+            endZoneSensorWidth, this.fieldHeight + 30,
+            { stroke: true, name: "RightEndZone" }
+        );
 
         this.lineOfScrimmage.marker = new FieldMarker(
             this,
@@ -602,6 +618,12 @@ export class BaseGameScene extends Scene {
                     continue;
                 }
 
+                const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
+                console.debug(
+                    `[DEBUG:collision] collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
+                    `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
+                );
+
                 if (otherPlayer?.entityType === 'SideLine') {
                     this.handleTackle(ballCarrier, otherPlayer, "SideLine");
                     break;
@@ -816,13 +838,11 @@ export class BaseGameScene extends Scene {
         }
 
         if (ballCarrier) {
-            const rightEndZoneLeft = 1454;
-            const leftEndZoneRight = 144;
-            if (this.targetEndzone === "Right" && ballCarrier.x > rightEndZoneLeft) {
+            if (this.targetEndzone === "Right" && ballCarrier.x > this.rightGoalLineX) {
                 this.handleTackle(ballCarrier, null, "Touchdown");
                 this.showTouchdownUI();
                 this.scored = true;
-            } else if (this.targetEndzone === "Left" && ballCarrier.x < leftEndZoneRight) {
+            } else if (this.targetEndzone === "Left" && ballCarrier.x < this.leftGoalLineX) {
                 this.handleTackle(ballCarrier, null, "Touchdown");
                 this.showTouchdownUI();
                 this.scored = true;

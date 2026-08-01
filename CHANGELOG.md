@@ -58,17 +58,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   past what actually fits above the fold.
 ### Added
 
+- Rounded-corner players (both ends) with two thin white stripes on the front edge to visually distinguish facing direction at a glance.
+- Console logging (unconditional) around the play lifecycle — snap, tackles, down/first-down/turnover resolution, and possession changes are tagged `[DEBUG]` via `console.log`; the high-volume per-collision trace is tagged `[DEBUG:collision]` via `console.debug` so it can be filtered out (or hidden by turning off "Verbose" in the browser console) without losing the rest — to help diagnose in-game rules bugs going forward.
 - Save game progress to `localStorage` so a Standard Game survives a page refresh. A "Resume
   Game" button appears on the main menu whenever a save exists; starting a fresh Standard Game
   or Free Play, or finishing all four quarters, leaves no stale save behind.
 
 ### Fixed
 
+- Player collision body now matches the visible base (rectangle sized to the base's width/height) instead of an oversized circle that extended well past the drawn shape.
+- Tackles no longer bounce the ball carrier and tackler apart before the down is called: pausing a play now freezes every player's physics body in place instead of only zeroing velocity, so Matter's collision-resolution can't shove overlapping bodies apart after contact.
 - Menu navigation (`MainMenu` and the in-game "Menu" button) now always restarts the target
   scene instead of waking a previously slept one. Waking never re-ran a scene's `init()`, so
   once you'd visited Standard Game or Free Play once, every later visit silently replayed
   whatever state was left in memory — most visibly, starting a new Standard Game after
   bouncing through Free Play would resume the old game instead of starting fresh.
+- Touchdowns were firing about 3 yards early on the left end zone (barely early on the right): the end zone sensors were hardcoded at positions that weren't actually symmetric relative to their own goal lines (the left sensor sat 9px past its goal line, the right one only 1px off). Both are now derived from the same goal-line formula, so a touchdown fires consistently on either side as soon as any part of the ball carrier crosses the goal line (leading edge, as before), not when their center does. The frame-by-frame tunneling backstop in `update()` used the same stale hardcoded positions and has been updated to match.
+- Player collision bodies are now chamfered to match the rounded corners of the drawn base, so a tackle can no longer register on a sharp rectangular corner while the rounded visual corners still show daylight between the two players.
 - The save now updates immediately after every tackle, not just on formation/possession/
   Next Play changes — refreshing while the "Down!"/"Touchdown" popup is showing no longer
   loses that play's result.
