@@ -15,6 +15,10 @@ import { ReviewScrubber } from "../ReviewScrubber";
 import { saveGame, loadGame } from "../saveGame";
 import { loadTeamColors } from "../gameSettings.js";
 
+function describeCollider(obj, body) {
+    return obj ? (obj.entityType || obj.name || obj.constructor?.name || "unknown") : (body?.label || "unknown");
+}
+
 export class BaseGameScene extends Scene {
     constructor(key) {
         super(key);
@@ -620,9 +624,6 @@ export class BaseGameScene extends Scene {
                     continue;
                 }
 
-                const describeCollider = (obj, body) =>
-                    obj ? (obj.entityType || obj.name || obj.constructor?.name || "unknown") : (body?.label || "unknown");
-
                 log("collision", () =>
                     `collision: A=${describeCollider(gameObjectA, bodyA)} B=${describeCollider(gameObjectB, bodyB)}`
                 );
@@ -640,10 +641,9 @@ export class BaseGameScene extends Scene {
                     continue;
                 }
 
-                if (!otherPlayer?.team || otherPlayer.team !== ballCarrier.team) {
-                    const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
+                if (otherPlayer?.team !== ballCarrier.team) {
                     log("collisionWithBallCarrier", () =>
-                        `collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
+                        `collisionstart: elapsedMs=${this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?"} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
                         `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
                     );
                 }
@@ -957,18 +957,18 @@ export class BaseGameScene extends Scene {
 
     updateTargetCircle(player) {
         if (player.targetCircle && !this.playPaused && this.playType === "Pass" &&
-               player.canReceivePass &&
-                player.teamHasPossession(this) && !this.scramble) {
-                player.targetCircle.setVisible(true);
-                player.targetCircle.setPosition(player.x, player.y);
-            }
-            if (player.targetCircle && this.scramble) {
-                player.targetCircle.setVisible(false);
-            }
+            player.canReceivePass &&
+            player.teamHasPossession(this) && !this.scramble) {
+            player.targetCircle.setVisible(true);
+            player.targetCircle.setPosition(player.x, player.y);
+        }
+        if (player.targetCircle && this.scramble) {
+            player.targetCircle.setVisible(false);
+        }
 
-            if (!player.teamHasPossession(this) && player.targetCircle) {
-                player.targetCircle.setVisible(false);
-            }
+        if (!player.teamHasPossession(this) && player.targetCircle) {
+            player.targetCircle.setVisible(false);
+        }
     }
 
     hideUIPopups() {
