@@ -77,3 +77,22 @@ export function loadTeamColors() {
     const data = readJSON(TEAM_COLORS_KEY);
     return isValidTeamColors(data) ? data : null;
 }
+
+// True when anything has been changed from the config.json defaults, in either bucket. Shared so
+// the main menu's "Using custom settings" label and the Preferences "Restore Defaults" button
+// can never disagree about whether there is anything to restore.
+export function hasCustomSettings() {
+    return loadSettings() !== null || loadTeamColors() !== null;
+}
+
+// Both buckets at once: "restore defaults" means every preference, and with nothing stored the
+// loaders return null and each caller falls back to its config.json default.
+export function clearSettings() {
+    for (const key of [STANDARD_GAME_KEY, TEAM_COLORS_KEY]) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            warn(`Could not clear settings at ${key}:`, e);
+        }
+    }
+}

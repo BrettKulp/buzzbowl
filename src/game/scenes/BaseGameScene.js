@@ -18,8 +18,8 @@ export class BaseGameScene extends Scene {
         super(key);
         this.vibrationStrength = config.physics.vibrationStrength;
 
-        this.awayColor = config.colors.away;
-        this.homeColor = config.colors.home;
+        // homeColor/awayColor are set in init() instead -- they come from a saved preference
+        // that can change between scene starts, unlike this one.
         this.ballCarrierColor = config.colors.ballCarrier;
 
         this.canvasWidth = config.canvas.width;
@@ -69,7 +69,9 @@ export class BaseGameScene extends Scene {
 
         // Unconditional (unlike the settings applied below only on a fresh game): team color
         // is cosmetic, not part of a match's saved rules, so it should reflect the current
-        // preference even when resuming a game that was started before it changed.
+        // preference even when resuming a game that was started before it changed. This only
+        // works because saveGame.js's KEYS list omits homeColor/awayColor -- adding them there
+        // would let the loadGame() call at the end of init() clobber the live preference.
         const savedColors = loadTeamColors() ?? {};
         this.homeColor = savedColors.homeColor ?? config.colors.home;
         this.awayColor = savedColors.awayColor ?? config.colors.away;

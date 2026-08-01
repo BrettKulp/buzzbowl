@@ -98,15 +98,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         }
     }
 
-    setHasBall(hasBall) {
-        this.hasBall = hasBall;
-        if (hasBall) {
-            this.fillColor = gameConfig.colors.ballCarrier
-        } else {
-            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
-        }
-    }
-
     stop() {
         if (this.body) {
             try {
@@ -204,10 +195,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         }
     }
 
-    setTeamColor(color) {
-        this.fillColor = color;
-    }
-
     updateVeer(dt, params) {
         if (!this.body || !this.active) return null;
 
@@ -258,14 +245,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (this._testDot) {
             this._testDot.destroy();
             this._testDot = null;
-        }
-    }
-
-    resetColor() {
-        if (this.hasBall) {
-            this.fillColor = gameConfig.colors.ballCarrier;
-        } else {
-            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
         }
     }
 

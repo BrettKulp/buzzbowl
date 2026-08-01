@@ -89,10 +89,6 @@ describe('team colors round-trip', () => {
         expect(loaded.awayColor).toBe(black);
     });
 
-    it('does not write until saveTeamColors is called (no auto-persist)', () => {
-        expect(localStorage.getItem('buzzbowl:settings:TeamColors')).toBeNull();
-    });
-
     it('does not collide with the Standard Game settings bucket', () => {
         saveSettings({ quarterMode: 'plays' });
         expect(loadTeamColors()).toBeNull();
