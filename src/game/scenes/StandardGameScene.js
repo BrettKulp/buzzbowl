@@ -1,6 +1,7 @@
 import { BaseGameScene } from "./BaseGameScene";
 import config from "../configLoader.js";
 import { yardsToPixels } from "../helpers";
+import { clearSave } from "../saveGame";
 export class StandardGameScene extends BaseGameScene {
     constructor() {
         super("StandardGame");
@@ -9,10 +10,12 @@ export class StandardGameScene extends BaseGameScene {
         this.quarterText = null;
     }
 
-    init() {
-        super.init();
-        this.quarter = 1;
-        this.gameClock = this.quarterLength;
+    init(data) {
+        super.init(data);
+        if (!data?.resume) {
+            this.quarter = 1;
+            this.gameClock = this.quarterLength;
+        }
         this.clockRunning = false;
         this.halftime = false;
         this.endQuarterAfterPlay = false;
@@ -144,5 +147,6 @@ export class StandardGameScene extends BaseGameScene {
     gameOver() {
         // TODO: show final score / game over screen
         this.quarterText.setText("FINAL");
+        clearSave(this);
     }
 }
