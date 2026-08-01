@@ -40,7 +40,7 @@ function readSave(sceneKey) {
         const data = JSON.parse(raw);
         return isValid(data) ? data : null;
     } catch (e) {
-        warn("Ignoring unreadable save:", e);
+        warn("warn", "Ignoring unreadable save:", e);
         return null;
     }
 }
@@ -53,7 +53,7 @@ export function saveGame(scene) {
     try {
         localStorage.setItem(storageKey(scene.scene.key), JSON.stringify(data));
     } catch (e) {
-        warn("Could not save game:", e);
+        warn("warn", "Could not save game:", e);
     }
 }
 
@@ -99,6 +99,6 @@ export function clearSave(scene) {
     try {
         localStorage.removeItem(storageKey(scene.scene.key));
     } catch (e) {
-        warn("Could not clear save:", e);
+        warn("warn", "Could not clear save:", e);
     }
 }

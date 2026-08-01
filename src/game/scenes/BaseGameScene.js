@@ -422,15 +422,14 @@ export class BaseGameScene extends Scene {
         this.input.on(
             "gameobjectdown",
             (pointer, gameObject) => {
-                log("Object clicked:", gameObject.entityType);
+                log("player", () => `Object clicked: entityType=${gameObject.entityType}`);
 
                 if (!this.playStarted && !this.reviewMode && gameObject.entityType === "Player") {
-                    log("Player selected:", gameObject.x, gameObject.y);
-                    log("Id: ", gameObject.id);
-                    log("off pos:", gameObject.offensivePosition);
-                    log("Team has possession", gameObject.teamHasPossession(this));
-                    log("Posseession", this.possession);
-                    log("player has ball", gameObject.hasBall);
+                    log("player", () =>
+                        `Player selected: id=${gameObject.id} offPos=${gameObject.offensivePosition} ` +
+                        `hasPossession=${gameObject.teamHasPossession(this)} hasBall=${gameObject.hasBall} ` +
+                        `x=${gameObject.x} y=${gameObject.y}`
+                    );
                     deselectAllPlayers(this);
 
                     const currentAngle = gameObject.currentAngle || 0;
@@ -450,7 +449,6 @@ export class BaseGameScene extends Scene {
 
                     gameObject._testDot = arrowSprite;
 
-                    log("Created arrow sprite:", arrowSprite);
                     gameObject.isSelected = true;
                 }
 
@@ -612,6 +610,13 @@ export class BaseGameScene extends Scene {
                     continue;
                 }
 
+                const describeCollider = (obj, body) =>
+                    obj ? (obj.entityType || obj.name || obj.constructor?.name || "unknown") : (body?.label || "unknown");
+
+                log("collision", () =>
+                    `collision: A=${describeCollider(gameObjectA, bodyA)} B=${describeCollider(gameObjectB, bodyB)}`
+                );
+
                 let ballCarrier = null;
                 let otherPlayer = null;
 
@@ -625,11 +630,13 @@ export class BaseGameScene extends Scene {
                     continue;
                 }
 
-                const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
-                console.debug(
-                    `[DEBUG:collision] collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
-                    `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
-                );
+                if (!otherPlayer?.team || otherPlayer.team !== ballCarrier.team) {
+                    const elapsedMs = this.snapAt != null ? (this.time.now - this.snapAt).toFixed(0) : "?";
+                    log("collisionWithBallCarrier", () =>
+                        `collisionstart: elapsedMs=${elapsedMs} ballCarrier=id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)} ` +
+                        `otherPlayer=${otherPlayer ? `id=${otherPlayer.id} team=${otherPlayer.team} entityType=${otherPlayer.entityType} x=${otherPlayer.x?.toFixed?.(1)}` : "none"}`
+                    );
+                }
 
                 if (otherPlayer?.entityType === 'SideLine') {
                     this.handleTackle(ballCarrier, otherPlayer, "SideLine");
@@ -639,7 +646,6 @@ export class BaseGameScene extends Scene {
                 if (otherPlayer?.entityType === 'EndZone' &&
                     ((this.targetEndzone === "Right" && otherPlayer.name === "RightEndZone") ||
                         (this.targetEndzone === "Left" && otherPlayer.name === "LeftEndZone"))) {
-                    log("touchdown in collission detectin with right endzone");
                     this.handleTackle(ballCarrier, otherPlayer, "Touchdown");
                     this.nextPlayButton.enable();
                     break;
@@ -840,9 +846,6 @@ export class BaseGameScene extends Scene {
                 }
 
                 if (crossed) {
-                    log(
-                        `[LOS Enforce] Player ${player.id} (${player.team}) pushed back from x=${player.x.toFixed(1)} to x=${newX.toFixed(1)} | LOS x=${losX}`
-                    );
                     player.x = newX;
                     if (player.body) {
                         this.matter.body.setPosition(player.body, { x: newX, y: player.y });
@@ -940,8 +943,7 @@ export class BaseGameScene extends Scene {
     }
 
     updateTargetCircle(player) {
-        log(player);
-            if (player.targetCircle && !this.playPaused && this.playType === "Pass" &&
+        if (player.targetCircle && !this.playPaused && this.playType === "Pass" &&
                player.canReceivePass &&
                 player.teamHasPossession(this) && !this.scramble) {
                 player.targetCircle.setVisible(true);

@@ -114,7 +114,7 @@ export class Player extends Phaser.GameObjects.Graphics {
                 this.scene.matter.body.setAngularVelocity(this.body, 0);
                 this.scene.matter.body.setStatic(this.body, true);
             } catch (e) {
-                error("Error stopping player:", e);
+                error("error", "Error stopping player:", e);
             }
         }
     }
@@ -124,7 +124,7 @@ export class Player extends Phaser.GameObjects.Graphics {
             try {
                 this.scene.matter.body.setStatic(this.body, false);
             } catch (e) {
-                error("Error making player dynamic:", e);
+                error("error", "Error making player dynamic:", e);
             }
         }
     }
@@ -182,7 +182,7 @@ export class Player extends Phaser.GameObjects.Graphics {
                 this.scene.matter.body.setPosition(this.body, { x: targetX, y: targetY });
             }
         } catch (e) {
-            error("Error resetting player state:", e);
+            error("error", "Error resetting player state:", e);
         }
     }
 
@@ -295,26 +295,15 @@ export class Player extends Phaser.GameObjects.Graphics {
     }
 
     logPlayer() {
-        log("--- Player Info ---");
-        log("id:", this.id);
-        log("team:", this.team);
-        log("side:", this.side);
-        log("entityType:", this.entityType);
-        log("offensivePosition:", this.offensivePosition);
-        log("defensivePosition:", this.defensivePosition);
-        log("hasBall:", this.hasBall);
-        log("canReceivePass:", this.canReceivePass);
-        log("isSelected:", this.isSelected);
-        log("x:", this.x, "y:", this.y);
-        log("initialX:", this.initialX, "initialY:", this.initialY);
-        log("origX:", this.origX, "origY:", this.origY);
-        log("baseAngle:", this.baseAngle);
-        log("currentAngle:", this.currentAngle);
-        log("initialVeerMomentum:", this.initialVeerMomentum);
-        log("veerMomentum:", this.veerMomentum);
-        log("initialVeerTargetDirection:", this.initialVeerTargetDirection);
-        log("veerTargetDirection:", this.veerTargetDirection);
-        log("fillColor:", this.fillColor);
-        log("-------------------");
+        log("player", () =>
+            `Player ${this.id}: team=${this.team} side=${this.side} entityType=${this.entityType} ` +
+            `offPos=${this.offensivePosition} defPos=${this.defensivePosition} hasBall=${this.hasBall} ` +
+            `canReceivePass=${this.canReceivePass} isSelected=${this.isSelected} x=${this.x} y=${this.y} ` +
+            `initialX=${this.initialX} initialY=${this.initialY} origX=${this.origX} origY=${this.origY} ` +
+            `baseAngle=${this.baseAngle} currentAngle=${this.currentAngle} ` +
+            `initialVeerMomentum=${this.initialVeerMomentum} veerMomentum=${this.veerMomentum} ` +
+            `initialVeerTargetDirection=${this.initialVeerTargetDirection} ` +
+            `veerTargetDirection=${this.veerTargetDirection} fillColor=${this.fillColor}`
+        );
     }
 }

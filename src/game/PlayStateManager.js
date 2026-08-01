@@ -23,8 +23,8 @@ export class PlayStateManager {
         this.game.ballCarrierStillSince = this.game.time.now;
         this.game.ballCarrierStillAtX = snapBallCarrier ? snapBallCarrier.x : null;
         this.game.ballCarrierFurthestX = snapBallCarrier ? snapBallCarrier.x : null;
-        console.log(
-            `[DEBUG] startPlay: possession=${this.game.possession} down=${this.game.down} ` +
+        log("play", () =>
+            `startPlay: possession=${this.game.possession} down=${this.game.down} ` +
             `LOS=${this.game.lineOfScrimmage.x.toFixed(1)} playType=${this.game.playType} ` +
             `ballCarrier=${snapBallCarrier ? `id=${snapBallCarrier.id} x=${snapBallCarrier.x.toFixed(1)}` : "none"}`
         );
@@ -71,8 +71,8 @@ export class PlayStateManager {
     }
 
     changePossession(keepLOS = false) {
-        console.log(
-            `[DEBUG] changePossession: ${this.game.possession} -> ${this.game.possession === "Home" ? "Away" : "Home"} ` +
+        log("play", () =>
+            `changePossession: ${this.game.possession} -> ${this.game.possession === "Home" ? "Away" : "Home"} ` +
             `keepLOS=${keepLOS} LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
         );
 
@@ -117,8 +117,8 @@ export class PlayStateManager {
     }
     
     nextPlay() {
-        console.log(
-            `[DEBUG] nextPlay: scored=${this.game.scored} turnoverOnDowns=${this.game.turnoverOnDowns} ` +
+        log("play", () =>
+            `nextPlay: scored=${this.game.scored} turnoverOnDowns=${this.game.turnoverOnDowns} ` +
             `down=${this.game.down} possession=${this.game.possession}`
         );
 
@@ -138,7 +138,7 @@ export class PlayStateManager {
         this.game.playPaused = false;
         this.game.framesAfterScore = 40;
 
-        log(`new lOS: ${this.game.lineOfScrimmage.x}`);
+        log("play", () => `new lOS: ${this.game.lineOfScrimmage.x}`);
 
         this.forEachPlayer((player) => {
             if (player && player.resetPosition) {
@@ -160,23 +160,15 @@ export class PlayStateManager {
 
         const elapsedMs = this.game.snapAt != null ? (this.game.time.now - this.game.snapAt).toFixed(0) : "?";
         const traveled = ballCarrier ? (ballCarrier.x - this.game.lineOfScrimmage.previousX).toFixed(1) : "n/a";
-        console.log(
-            `[DEBUG] handleTackle type=${type || "Tackle"} elapsedMs=${elapsedMs} ` +
+        log("play", () =>
+            `handleTackle type=${type || "Tackle"} elapsedMs=${elapsedMs} ` +
             `ballCarrier=${ballCarrier ? `id=${ballCarrier.id} team=${ballCarrier.team} x=${ballCarrier.x.toFixed(1)}` : "none"} ` +
             `tackler=${tackler ? `id=${tackler.id} team=${tackler.team} entityType=${tackler.entityType}` : "none"} ` +
             `traveledSinceSnap=${traveled}px LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
         );
 
-        if (config.debug) {
-            try {
-                log("ball carrier");
-                if (ballCarrier) ballCarrier.logPlayer();
-                log("tackler");
-                if (tackler) tackler.logPlayer();
-            } catch {
-                log("tackle was made by sideline/endzone");
-            }
-        }
+        if (ballCarrier?.logPlayer) ballCarrier.logPlayer();
+        if (tackler?.logPlayer) tackler.logPlayer();
 
         let tackleX;
 
@@ -221,7 +213,7 @@ export class PlayStateManager {
 
         const motionlessMs = now - this.game.ballCarrierStillSince;
         if (motionlessMs >= this.game.stuckTimeoutSeconds * 1000) {
-            log(`[Stuck] motionless ${(motionlessMs / 1000).toFixed(1)}s at x=${x.toFixed(1)}`);
+            log("stuck", () => `motionless ${(motionlessMs / 1000).toFixed(1)}s at x=${x.toFixed(1)}`);
             this.game.handleTackle(ballCarrier, null, "Stuck");
         }
     }
@@ -240,13 +232,13 @@ export class PlayStateManager {
             ? this.game.ballCarrierFurthestX - x
             : x - this.game.ballCarrierFurthestX;
         if (backwardPx >= yardsToPixels(this.game.stuckBackwardYards)) {
-            log(`[Stuck] drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
+            log("stuck", () => `drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
             this.game.handleTackle(ballCarrier, null, "Stuck");
         }
     }
 
     handleTouchdown() {
-        log("Touchdown of " +
+        log("play", () => "Touchdown of " +
             (this.game.lineOfScrimmage.x - this.game.lineOfScrimmage.previousX).toFixed(2) + "px");
 
         this.game.showTouchdownUI();
@@ -286,8 +278,8 @@ export class PlayStateManager {
             } else {
                 this.incrementDown();
             }
-            console.log(
-                `[DEBUG] handleNonTouchdown: newLOS=${newLOS.toFixed(1)} firstDownMarker=${this.game.firstDownMarker.x.toFixed(1)} ` +
+            log("play", () =>
+                `handleNonTouchdown: newLOS=${newLOS.toFixed(1)} firstDownMarker=${this.game.firstDownMarker.x.toFixed(1)} ` +
                 `reachedFirstDown=${reachedFirstDown} down=${this.game.down} turnoverOnDowns=${this.game.turnoverOnDowns}`
             );
             this.game.showDownUI();
