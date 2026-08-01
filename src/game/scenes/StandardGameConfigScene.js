@@ -1,12 +1,14 @@
 import { Scene } from "phaser";
 import { Button } from "../Button";
 import config from "../configLoader.js";
-import { loadSettings, saveSettings } from "../gameSettings.js";
+import { loadSettings, saveSettings, loadTeamColors, saveTeamColors } from "../gameSettings.js";
 
 const ROW_LABEL_X = 400;
 const ARROW_LEFT_X = 900;
 const VALUE_X = 1000;
 const ARROW_RIGHT_X = 1100;
+const SWATCH_X = 1200;
+const SWATCH_SIZE = 40;
 const ARROW_STYLE = { fontSize: "36px", fill: "#fff", fontStyle: "bold" };
 const LABEL_STYLE = { fontSize: "28px", fill: "#fff", fontStyle: "bold" };
 const VALUE_STYLE = { fontSize: "30px", fill: "#fff", fontStyle: "bold" };
@@ -42,6 +44,11 @@ export class StandardGameConfigScene extends Scene {
         this.stuckBackwardEnabled = saved.stuckBackwardEnabled ?? sg.stuckBackwardDrift.enabledByDefault;
         this.stuckBackwardYards = saved.stuckBackwardYards ?? sg.stuckBackwardDrift.default;
 
+        this.palette = Object.entries(config.teamColorPalette);
+        const savedColors = loadTeamColors() ?? {};
+        this.homeColor = savedColors.homeColor ?? config.colors.home;
+        this.awayColor = savedColors.awayColor ?? config.colors.away;
+
         this.add.text(this.canvasWidth / 2, 60, "Preferences", {
             fontSize: "48px", fill: "#fff", fontStyle: "bold"
         }).setOrigin(0.5);
@@ -61,8 +68,10 @@ export class StandardGameConfigScene extends Scene {
         this.createStuckSecondsRow(440);
         this.createStuckBackwardRow(530);
         this.createStuckYardsRow(610);
+        this.createHomeColorRow(690);
+        this.createAwayColorRow(770);
 
-        this.add.text(this.canvasWidth / 2, 750, "Changes save automatically.", {
+        this.add.text(this.canvasWidth / 2, 840, "Changes save automatically.", {
             fontSize: "20px", fill: "#999", fontStyle: "italic"
         }).setOrigin(0.5);
     }
@@ -121,6 +130,28 @@ export class StandardGameConfigScene extends Scene {
             .onClick(() => this.adjustStuckYards(1));
     }
 
+    createHomeColorRow(y) {
+        this.add.text(ROW_LABEL_X, y, "Home Color", LABEL_STYLE).setOrigin(0, 0.5);
+        new Button(this, ARROW_LEFT_X, y, "<", { width: 60, height: 60, labelStyle: ARROW_STYLE })
+            .onClick(() => this.cycleHomeColor(-1));
+        this.homeColorText = this.add.text(VALUE_X, y, this.paletteNameOf(this.homeColor), VALUE_STYLE).setOrigin(0.5);
+        new Button(this, ARROW_RIGHT_X, y, ">", { width: 60, height: 60, labelStyle: ARROW_STYLE })
+            .onClick(() => this.cycleHomeColor(1));
+        this.homeColorSwatch = this.add.rectangle(SWATCH_X, y, SWATCH_SIZE, SWATCH_SIZE, this.homeColor)
+            .setStrokeStyle(2, 0xffffff);
+    }
+
+    createAwayColorRow(y) {
+        this.add.text(ROW_LABEL_X, y, "Away Color", LABEL_STYLE).setOrigin(0, 0.5);
+        new Button(this, ARROW_LEFT_X, y, "<", { width: 60, height: 60, labelStyle: ARROW_STYLE })
+            .onClick(() => this.cycleAwayColor(-1));
+        this.awayColorText = this.add.text(VALUE_X, y, this.paletteNameOf(this.awayColor), VALUE_STYLE).setOrigin(0.5);
+        new Button(this, ARROW_RIGHT_X, y, ">", { width: 60, height: 60, labelStyle: ARROW_STYLE })
+            .onClick(() => this.cycleAwayColor(1));
+        this.awayColorSwatch = this.add.rectangle(SWATCH_X, y, SWATCH_SIZE, SWATCH_SIZE, this.awayColor)
+            .setStrokeStyle(2, 0xffffff);
+    }
+
     toggleQuarterMode() {
         this.quarterMode = this.quarterMode === "time" ? "plays" : "time";
         this.quarterModeText.setText(this.formatQuarterMode());
@@ -168,6 +199,34 @@ export class StandardGameConfigScene extends Scene {
         this.persist();
     }
 
+    cycleHomeColor(direction) {
+        this.homeColor = this.paletteColorAfter(this.homeColor, direction);
+        this.homeColorText.setText(this.paletteNameOf(this.homeColor));
+        this.homeColorSwatch.setFillStyle(this.homeColor);
+        this.persistColors();
+    }
+
+    cycleAwayColor(direction) {
+        this.awayColor = this.paletteColorAfter(this.awayColor, direction);
+        this.awayColorText.setText(this.paletteNameOf(this.awayColor));
+        this.awayColorSwatch.setFillStyle(this.awayColor);
+        this.persistColors();
+    }
+
+    paletteIndexOf(colorInt) {
+        const index = this.palette.findIndex(([, hex]) => hex === colorInt);
+        return index === -1 ? 0 : index;
+    }
+
+    paletteColorAfter(colorInt, direction) {
+        const nextIndex = (this.paletteIndexOf(colorInt) + direction + this.palette.length) % this.palette.length;
+        return this.palette[nextIndex][1];
+    }
+
+    paletteNameOf(colorInt) {
+        return this.palette[this.paletteIndexOf(colorInt)][0];
+    }
+
     formatQuarterMode() {
         return this.quarterMode === "time" ? "Time" : "Play Count";
     }
@@ -206,5 +265,9 @@ export class StandardGameConfigScene extends Scene {
 
     persist() {
         saveSettings(this.buildSettings());
+    }
+
+    persistColors() {
+        saveTeamColors({ homeColor: this.homeColor, awayColor: this.awayColor });
     }
 }

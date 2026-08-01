@@ -11,6 +11,7 @@ import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectA
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
 import { saveGame, loadGame } from "../saveGame";
+import { loadTeamColors } from "../gameSettings.js";
 
 export class BaseGameScene extends Scene {
     constructor(key) {
@@ -65,6 +66,13 @@ export class BaseGameScene extends Scene {
     init(data) {
         this.home = null;
         this.away = null;
+
+        // Unconditional (unlike the settings applied below only on a fresh game): team color
+        // is cosmetic, not part of a match's saved rules, so it should reflect the current
+        // preference even when resuming a game that was started before it changed.
+        const savedColors = loadTeamColors() ?? {};
+        this.homeColor = savedColors.homeColor ?? config.colors.home;
+        this.awayColor = savedColors.awayColor ?? config.colors.away;
 
         this.lineOfScrimmage = {
             x: config.field.lineOfScrimmageX,

@@ -6,7 +6,8 @@ import { FreePlayScene } from '../../src/game/scenes/FreePlayScene.js';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
 import { StandardGameConfigScene } from '../../src/game/scenes/StandardGameConfigScene.js';
 import { saveGame } from '../../src/game/saveGame.js';
-import { saveSettings, loadSettings } from '../../src/game/gameSettings.js';
+import { saveSettings, loadSettings, saveTeamColors } from '../../src/game/gameSettings.js';
+import { getHomePlayers, getAwayPlayers } from '../../src/game/helpers.js';
 
 let game;
 
@@ -281,5 +282,72 @@ describe('preferences screen', () => {
 
         expect(game.scene.isActive('StandardGame')).toBe(true);
         expect(standardGame.down).toBe(3);
+    });
+});
+
+describe('team colors', () => {
+    // Team color is a cross-mode preference (unlike the Standard-Game-only quarter/stuck
+    // settings above), stored under its own key and read directly in BaseGameScene.init() --
+    // this proves it reaches actual created players, not just the scene's color fields.
+    it('applies saved team colors to newly created players in Standard Game', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        saveTeamColors({ homeColor: 0xaa0000, awayColor: 0x3399cc });
+
+        const created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        expect(standardGame.homeColor).toBe(0xaa0000);
+        expect(standardGame.awayColor).toBe(0x3399cc);
+        expect(getHomePlayers(standardGame).find((p) => !p.hasBall).fillColor).toBe(0xaa0000);
+        expect(getAwayPlayers(standardGame).find((p) => !p.hasBall).fillColor).toBe(0x3399cc);
+    });
+
+    // The "Both modes" decision: colors aren't Standard-Game-specific, so Free Play (which has
+    // no settings screen of its own and inherits BaseGameScene.init() unmodified) must pick
+    // them up too.
+    it('applies saved team colors to newly created players in Free Play', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const freePlay = game.scene.getScene('FreePlay');
+
+        saveTeamColors({ homeColor: 0x550088, awayColor: 0xcc5500 });
+
+        const created = waitForCreate(freePlay);
+        mainMenu.switchScene('FreePlay');
+        await created;
+
+        expect(getHomePlayers(freePlay).find((p) => !p.hasBall).fillColor).toBe(0x550088);
+        expect(getAwayPlayers(freePlay).find((p) => !p.hasBall).fillColor).toBe(0xcc5500);
+    });
+
+    // Unlike quarter mode/stuck-rule settings (only applied on a fresh game), team color is
+    // cosmetic rather than part of a match's saved rules, so BaseGameScene.init() applies it
+    // unconditionally -- this proves a resume reflects the *current* preference, not whatever
+    // was in effect when the save was made.
+    it('applies the current team color preference even when resuming a saved game', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        let created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        standardGame.down = 3;
+        saveGame(standardGame);
+        saveTeamColors({ homeColor: 0x7a0026, awayColor: 0xccaa00 });
+
+        created = waitForCreate(mainMenu);
+        standardGame.returnToMenu();
+        await created;
+
+        created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame', true); // "Resume Game"
+        await created;
+
+        expect(standardGame.down).toBe(3); // sanity check: still a real resume
+        expect(standardGame.homeColor).toBe(0x7a0026);
+        expect(standardGame.awayColor).toBe(0xccaa00);
     });
 });

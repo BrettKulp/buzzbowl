@@ -110,3 +110,21 @@ describe('configLoader', () => {
         expect(config.players.canReceivePass.every((p) => typeof p === 'string')).toBe(true);
     });
 });
+
+describe('config.json teamColorPalette', () => {
+    // teamColorPalette is a plain object (not an array) specifically so parseHexColors'
+    // array-skipping guard (tested above) doesn't leave its hex strings unconverted.
+    it('converts every palette entry to an integer', () => {
+        for (const [name, value] of Object.entries(config.teamColorPalette)) {
+            expect(typeof value, `teamColorPalette.${name}`).toBe('number');
+        }
+    });
+
+    // The Preferences screen's default home/away selection must land on a real palette
+    // entry, or its cycling selector would silently show the wrong name for the default color.
+    it('includes the default home and away colors', () => {
+        const paletteValues = Object.values(config.teamColorPalette);
+        expect(paletteValues).toContain(config.colors.home);
+        expect(paletteValues).toContain(config.colors.away);
+    });
+});

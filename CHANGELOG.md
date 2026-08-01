@@ -85,6 +85,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   condition alone ends the play, both independently toggleable and on by default (6s / 5 yards)
   to guard against Matter.js's zero-gravity physics letting a player circle in place
   indefinitely.
+- Team color picker on the Preferences screen: choose each team's color from a 10-color preset
+  palette (cycled with the same `<`/`>` selector as every other row, with a live swatch). Unlike
+  the quarter/house-rule settings, this applies to both Standard Game and Free Play, and to a
+  resumed game as well — it's a cosmetic preference, not part of a match's saved rules.
 
 ### Fixed
 

@@ -103,7 +103,7 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (hasBall) {
             this.fillColor = gameConfig.colors.ballCarrier
         } else {
-            this.fillColor = this.team === "Home" ? gameConfig.colors.home : gameConfig.colors.away;
+            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
         }
     }
 
@@ -265,7 +265,7 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (this.hasBall) {
             this.fillColor = gameConfig.colors.ballCarrier;
         } else {
-            this.fillColor = this.team === "Home" ? gameConfig.colors.home : gameConfig.colors.away;
+            this.fillColor = this.team === "Home" ? this.scene.homeColor : this.scene.awayColor;
         }
     }
 

@@ -17,6 +17,18 @@
     "targetCircle": "#FF0000",
     "rotationHandle": "#000000"
   },
+  "teamColorPalette": {
+    "Navy": "#000088",
+    "Black": "#000000",
+    "Red": "#AA0000",
+    "Sky Blue": "#3399CC",
+    "Orange": "#CC5500",
+    "Purple": "#550088",
+    "Teal": "#007777",
+    "Maroon": "#7A0026",
+    "Gold": "#CCAA00",
+    "Gray": "#666666"
+  },
   "canvas": {
     "width": 1600,
     "height": 900
