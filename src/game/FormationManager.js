@@ -58,7 +58,7 @@ export class FormationManager {
                 }
             });
         } catch (e) {
-            error("Error processing offensive formation:", e);
+            error("error", "Error processing offensive formation:", e);
         }
         this.game.checkBallCarrier();
     }
@@ -97,7 +97,7 @@ export class FormationManager {
                 player.fillColor = defTeamColor;
             });
         } catch (e) {
-            error("Error processing defensive formation:", e);
+            error("error", "Error processing defensive formation:", e);
         }
     }
 
@@ -128,7 +128,7 @@ export class FormationManager {
                 }
             });
         } catch (e) {
-            error("Error processing play type:", e);
+            error("error", "Error processing play type:", e);
         }
     }
 
@@ -145,7 +145,7 @@ export class FormationManager {
                 this.applyBallCarrierColor(player, offColor);
             });
         } catch (e) {
-            error("Error processing checkBallCarrier:", e);
+            error("error", "Error processing checkBallCarrier:", e);
         }
     }
 

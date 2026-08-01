@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Reworked debug logging: `log`, `warn`, and `error` are all now gated by `debug.enabled` in
+  `config.json` and emit a `[DEBUG:<category>]` prefix, and each log category
+  (`collision`, `collisionWithBallCarrier`, `play`, `stuck`, `player`, `error`, `warn`) can be
+  toggled individually under `debug.categories`. Log arguments are lazily evaluated (pass a
+  thunk) so disabled logs cost nothing. Raw `console.log`/`console.debug` calls in
+  `PlayStateManager` and `BaseGameScene` were routed through the logger,
+  `Player.logPlayer()` was condensed to a single line, a general `collision` log was added
+  alongside the ball-carrier collision detail, and per-frame/verbose logs (per-click player
+  dumps and the per-player `updateTargetCircle` dump) were removed.
+- The LOS enforcement log is back as a `los` debug category so it can be toggled from
+  `debug.categories` in `config.json`.
+- The `collisionWithBallCarrier` debug log now skips collisions with same-team players, and
+  `PlayStateManager.handleTackle` no longer throws when the "tackler" is an EndZone or SideLine
+  entity (they have no `logPlayer` method).
+
 ### Fixed
 
 - Fixed a syntax error in the stuck-ball-carrier check (unclosed paren, undefined `game`

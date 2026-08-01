@@ -23,7 +23,7 @@ function readJSON(key) {
         const raw = localStorage.getItem(key);
         return raw ? JSON.parse(raw) : null;
     } catch (e) {
-        warn(`Ignoring unreadable settings at ${key}:`, e);
+        warn("warn", `Ignoring unreadable settings at ${key}:`, e);
         return null;
     }
 }
@@ -36,7 +36,7 @@ function writeJSON(key, fields, values) {
     try {
         localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
-        warn(`Could not save settings at ${key}:`, e);
+        warn("warn", `Could not save settings at ${key}:`, e);
     }
 }
 
@@ -92,7 +92,7 @@ export function clearSettings() {
         try {
             localStorage.removeItem(key);
         } catch (e) {
-            warn(`Could not clear settings at ${key}:`, e);
+            warn("warn", `Could not clear settings at ${key}:`, e);
         }
     }
 }
