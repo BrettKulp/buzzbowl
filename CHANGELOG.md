@@ -67,6 +67,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Save game progress to `localStorage` so a Standard Game survives a page refresh. A "Resume
   Game" button appears on the main menu whenever a save exists; starting a fresh Standard Game
   or Free Play, or finishing all four quarters, leaves no stale save behind.
+- "Preferences" screen, reached by its own button at the bottom of the main menu, for the
+  Standard Game quarter mode (time vs. play count) and the stuck-ball-carrier house rule
+  settings below. Every change is written to `localStorage` immediately as it's made — there is
+  no separate save step — and is picked up the next time Standard Game is started. The main
+  menu shows a "Using custom settings" / "Using default settings" indicator so it's clear which
+  is in effect. "Resume Game" is unaffected — it continues to load the saved game's own state,
+  not these preferences.
+- "Stuck ball carrier" house rule: a play now auto-ends (dead ball, same as a tackle) if the
+  ball carrier goes motionless for a configurable number of seconds, or drifts backward past a
+  configurable number of yards from the furthest point already reached in the play — either
+  condition alone ends the play, both independently toggleable and on by default (6s / 5 yards)
+  to guard against Matter.js's zero-gravity physics letting a player circle in place
+  indefinitely.
 
 ### Fixed
 

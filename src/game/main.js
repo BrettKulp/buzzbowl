@@ -1,4 +1,5 @@
 import { StandardGameScene } from './scenes/StandardGameScene';
+import { StandardGameConfigScene } from './scenes/StandardGameConfigScene';
 import { FreePlayScene } from './scenes/FreePlayScene';
 import { MainMenu } from "./scenes/MainMenu";
 import Phaser, { Game } from 'phaser';
@@ -40,6 +41,7 @@ const config = {
         MainMenu,
         FreePlayScene,
         StandardGameScene,
+        StandardGameConfigScene,
     ],
     audio: false,
 };

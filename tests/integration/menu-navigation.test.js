@@ -4,7 +4,9 @@ import Phaser from 'phaser';
 import { MainMenu } from '../../src/game/scenes/MainMenu.js';
 import { FreePlayScene } from '../../src/game/scenes/FreePlayScene.js';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
+import { StandardGameConfigScene } from '../../src/game/scenes/StandardGameConfigScene.js';
 import { saveGame } from '../../src/game/saveGame.js';
+import { saveSettings, loadSettings } from '../../src/game/gameSettings.js';
 
 let game;
 
@@ -15,7 +17,7 @@ function bootGame() {
             width: 1600,
             height: 900,
             physics: { default: 'matter', matter: { gravity: { y: 0 }, setBounds: true } },
-            scene: [MainMenu, FreePlayScene, StandardGameScene],
+            scene: [MainMenu, FreePlayScene, StandardGameScene, StandardGameConfigScene],
             audio: { noAudio: true },
             banner: false,
             callbacks: {
@@ -191,5 +193,93 @@ describe('menu navigation', () => {
         expect(standardGame.down).toBe(1);
         expect(standardGame.homeScore).toBe(0);
         expect(standardGame.quarter).toBe(1);
+    });
+});
+
+describe('preferences screen', () => {
+    // The "Preferences" button is a new, separate entry point from "Standard Game" -- this
+    // has to click the actual button to prove the routing exists, not just call switchScene()
+    // directly (which would trivially "work" regardless of whether any button wires to it).
+    it('routes the Preferences button to the config screen', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const configScene = game.scene.getScene('StandardGameConfig');
+
+        const created = waitForCreate(configScene);
+        mainMenu.preferencesButton.rect.emit('pointerdown');
+        await created;
+
+        expect(game.scene.isActive('StandardGameConfig')).toBe(true);
+    });
+
+    // "Standard Game" used to route through the config screen first; it now starts the game
+    // directly, same as Resume Game does, with the config screen reachable only via the
+    // separate Preferences button tested above.
+    it('starts Standard Game directly from the main menu, without the config screen', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        const created = waitForCreate(standardGame);
+        mainMenu.standardGameButton.rect.emit('pointerdown');
+        await created;
+
+        expect(game.scene.isActive('StandardGame')).toBe(true);
+        expect(game.scene.isActive('StandardGameConfig')).toBe(false);
+    });
+
+    it('auto-saves a changed setting immediately, with no separate save step', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const configScene = game.scene.getScene('StandardGameConfig');
+
+        const created = waitForCreate(configScene);
+        mainMenu.switchScene('StandardGameConfig');
+        await created;
+
+        configScene.toggleQuarterMode();
+        configScene.adjustQuarterValue(1);
+
+        const saved = loadSettings();
+        expect(saved.quarterMode).toBe('plays');
+    });
+
+    it('applies previously saved preferences the next time Standard Game starts', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        saveSettings({
+            quarterMode: 'plays', quarterPlayCount: 7,
+            stuckTimeoutEnabled: false, stuckBackwardYards: 9,
+        });
+
+        const created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        expect(standardGame.quarterMode).toBe('plays');
+        expect(standardGame.quarterPlayCount).toBe(7);
+        expect(standardGame.stuckTimeoutEnabled).toBe(false);
+        expect(standardGame.stuckBackwardYards).toBe(9);
+    });
+
+    it('lets Resume Game load the saved game state, not stored preferences', async () => {
+        const mainMenu = game.scene.getScene('MainMenu');
+        const standardGame = game.scene.getScene('StandardGame');
+
+        let created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame');
+        await created;
+
+        standardGame.down = 3;
+        saveGame(standardGame);
+
+        created = waitForCreate(mainMenu);
+        standardGame.returnToMenu();
+        await created;
+
+        created = waitForCreate(standardGame);
+        mainMenu.switchScene('StandardGame', true); // "Resume Game"
+        await created;
+
+        expect(game.scene.isActive('StandardGame')).toBe(true);
+        expect(standardGame.down).toBe(3);
     });
 });

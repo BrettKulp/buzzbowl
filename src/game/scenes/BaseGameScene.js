@@ -844,6 +844,8 @@ export class BaseGameScene extends Scene {
                 this.handleTackle(ballCarrier, null, "Touchdown");
                 this.showTouchdownUI();
                 this.scored = true;
+            } else {
+                this.checkStuckBallCarrier(ballCarrier);
             }
         }
 
@@ -1002,5 +1004,9 @@ export class BaseGameScene extends Scene {
 
     incrementDown() {
         this.playStateManager.incrementDown();
+    }
+
+    checkStuckBallCarrier(ballCarrier) {
+        this.playStateManager.checkStuckBallCarrier(ballCarrier);
     }
 }
