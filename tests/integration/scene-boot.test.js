@@ -71,10 +71,10 @@ describe('scene boot', () => {
         expect(scene.lineOfScrimmage.x).toBe(680);
     });
 
-    // Same delegation convention as handleTackle above -- this proves checkStuckBallCarrier is
+    // Same delegation convention as handleTackle above -- this proves checkBallCarrierMotion is
     // wired from the scene through to the play state manager, not that the stuck rule itself
     // is correct (the unit tests own that).
-    it('routes checkStuckBallCarrier through to the play state manager', () => {
+    it('routes checkBallCarrierMotion through to the play state manager', () => {
         scene.stuckTimeoutEnabled = true;
         scene.stuckTimeoutSeconds = 6;
         scene.stuckBackwardEnabled = false;
@@ -84,10 +84,10 @@ describe('scene boot', () => {
         scene.startPlay();
         const ballCarrier = getAllPlayers(scene).find((p) => p.hasBall);
         ballCarrier.x = 650;
-        scene.checkStuckBallCarrier(ballCarrier); // anchors the still-timer at x=650
+        scene.checkBallCarrierMotion(ballCarrier); // anchors the still-timer at x=650
 
         scene.time.now += 6000;
-        scene.checkStuckBallCarrier(ballCarrier);
+        scene.checkBallCarrierMotion(ballCarrier);
 
         expect(scene.down).toBe(2);
         expect(scene.lineOfScrimmage.x).toBe(680);

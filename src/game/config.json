@@ -35,8 +35,8 @@
     "quarterMode": "time",
     "quarterLengthSeconds": { "default": 120, "min": 60, "max": 900, "step": 30 },
     "quarterPlayCount": { "default": 10, "min": 5, "max": 30, "step": 1 },
-    "stuckTimeout": { "enabledByDefault": true, "default": 6, "min": 3, "max": 20, "step": 1 },
-    "stuckBackwardDrift": { "enabledByDefault": true, "default": 5, "min": 2, "max": 15, "step": 1 },
+    "stuckTimeout": { "enabledByDefault": false, "default": 6, "min": 3, "max": 20, "step": 1 },
+    "stuckBackwardDrift": { "enabledByDefault": false, "default": 5, "min": 2, "max": 15, "step": 1 },
     "stuckMotionEpsilonPixels": 3
   },
   "players": {

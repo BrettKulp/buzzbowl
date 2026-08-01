@@ -184,8 +184,18 @@ export class PlayStateManager {
         }
     }
 
-    checkStuckBallCarrier(ballCarrier) {
-        if (!this.game.stuckTimeoutEnabled && !this.game.stuckBackwardEnabled) return;
+    checkBallCarrierMotion(ballCarrier) {
+        if ((!this.game.stuckTimeoutEnabled && !this.game.stuckBackwardEnabled) ||
+            (ballCarrier.offensivePosition === "QB" && ballCarrier.teamHasPossession(this.game) && this.game.playType === "Pass")) {
+            return;
+        }
+
+        this.checkStuckMotionless(ballCarrier);
+        this.checkStuckBackwards(ballCarrier);
+    }
+
+    checkStuckMotionless(ballCarrier) {
+        if (!this.game.stuckTimeoutEnabled) return;
 
         const now = this.game.time.now;
         const x = ballCarrier.x;
@@ -200,30 +210,29 @@ export class PlayStateManager {
             this.game.ballCarrierStillAtX = x;
         }
 
+        const motionlessMs = now - this.game.ballCarrierStillSince;
+        if (motionlessMs >= this.game.stuckTimeoutSeconds * 1000) {
+            log(`[Stuck] motionless ${(motionlessMs / 1000).toFixed(1)}s at x=${x.toFixed(1)}`);
+            this.game.handleTackle(ballCarrier, null, "Stuck");
+        }
+    }
+
+    checkStuckBackwards(ballCarrier) {
+        if (!this.game.stuckBackwardEnabled) return;
+
+        const x = ballCarrier.x;
         const movingRight = this.game.targetEndzone === "Right";
         if (this.game.ballCarrierFurthestX == null ||
             (movingRight ? x > this.game.ballCarrierFurthestX : x < this.game.ballCarrierFurthestX)) {
             this.game.ballCarrierFurthestX = x;
         }
 
-        if (this.game.stuckTimeoutEnabled) {
-            const motionlessMs = now - this.game.ballCarrierStillSince;
-            if (motionlessMs >= this.game.stuckTimeoutSeconds * 1000) {
-                log(`[Stuck] motionless ${(motionlessMs / 1000).toFixed(1)}s at x=${x.toFixed(1)}`);
-                this.game.handleTackle(ballCarrier, null, "Stuck");
-                return;
-            }
-        }
-
-        if (this.game.stuckBackwardEnabled) {
-            const backwardPx = movingRight
-                ? this.game.ballCarrierFurthestX - x
-                : x - this.game.ballCarrierFurthestX;
-            if (backwardPx >= yardsToPixels(this.game.stuckBackwardYards)) {
-                log(`[Stuck] drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
-                this.game.handleTackle(ballCarrier, null, "Stuck");
-                return;
-            }
+        const backwardPx = movingRight
+            ? this.game.ballCarrierFurthestX - x
+            : x - this.game.ballCarrierFurthestX;
+        if (backwardPx >= yardsToPixels(this.game.stuckBackwardYards)) {
+            log(`[Stuck] drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
+            this.game.handleTackle(ballCarrier, null, "Stuck");
         }
     }
 

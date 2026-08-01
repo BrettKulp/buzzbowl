@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed a syntax error in the stuck-ball-carrier check (unclosed paren, undefined `game`
+  reference). The QB holding the ball on a Pass play is now exempt from the stuck-motionless and
+  stuck-backward checks so he can drop back and scramble without triggering a false tackle.
+  Split the old `checkStuckBallCarrier` into a `checkBallCarrierMotion` entry point plus separate
+  `checkStuckMotionless` and `checkStuckBackwards` helpers.
 - After a touchdown, the game now keeps running (players moving, clock ticking) during the
   celebration window instead of freezing; the pause now only triggers once the window ends.
   The window was also extended from 40 frames (~0.7s) to 120 frames (2s). The Matter collision
