@@ -421,8 +421,7 @@ export class BaseGameScene extends Scene {
                 if (!this.playStarted && gameObject.name === 'testDot' && gameObject.player) {
                     this.draggingRotationHandle = {
                         dot: gameObject,
-                        player: gameObject.player,
-                        initialAngle: gameObject.player.currentAngle || 0
+                        player: gameObject.player
                     };
                     gameObject.setAlpha(0.7);
                 }
@@ -811,14 +810,6 @@ export class BaseGameScene extends Scene {
         for (let i = 0; i < allPlayers.length; i++) {
             const player = allPlayers[i];
             if (!player || !player.active) continue;
-
-            if (player.rotationHandle && player.rotationHandle.visible) {
-                const angle = player.currentAngle;
-                player.rotationHandle.setPosition(
-                    player.x + Math.cos(angle) * 40,
-                    player.y + Math.sin(angle) * 40
-                );
-            }
 
             if (player.targetCircle) {
                 player.targetCircle.setPosition(player.x, player.y);

@@ -43,6 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PlayStateManager.handleTackle` no longer throws when the "tackler" is an EndZone or SideLine
   entity (they have no `logPlayer` method).
 
+### Removed
+
+- Removed the unused `rotationHandle` circle (created per-player in `Player`, positioned from
+  `currentAngle` in the scene `update` loop, but never shown), its `rotationHandle` color in
+  `config.json`, the never-read `initialAngle` recorded when the rotation-arrow handle starts
+  being dragged, and the never-called `Player.setBaseAngle`. None of these were referenced
+  anywhere at runtime.
+
 ### Fixed
 
 - Player facing (the front stripes on each player, and the rotation-arrow handle that appears

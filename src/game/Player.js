@@ -69,13 +69,6 @@ export class Player extends Phaser.GameObjects.Graphics {
             scene.matter.body.setVelocity(this.body, { x: 0, y: 0 });
             scene.matter.body.setAngularVelocity(this.body, 0);
         }
-
-        this.rotationHandle = scene.add.circle(x, y + 40, 8, gameConfig.colors.rotationHandle);
-        this.rotationHandle.setVisible(false);
-        this.rotationHandle.setInteractive({ useHandCursor: true });
-        this.rotationHandle.player = this;
-        this.rotationHandle.setDepth(100);
-        scene.input.setDraggable(this.rotationHandle);
     }
 
     get fillColor() {
@@ -278,16 +271,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (this._testDot) {
             this._testDot.destroy();
             this._testDot = null;
-        }
-    }
-
-    setBaseAngle(angle) {
-        this.baseAngle = angle;
-        this.currentAngle = angle;
-        if (this.body) {
-            this.scene.matter.body.setAngle(this.body, angle);
-        } else {
-            this.setRotation(angle);
         }
     }
 

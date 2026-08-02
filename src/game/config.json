@@ -24,8 +24,7 @@
     "button": "#444444",
     "buttonHover": "#555555",
     "buttonDisabled": "#888888",
-    "targetCircle": "#FF0000",
-    "rotationHandle": "#000000"
+    "targetCircle": "#FF0000"
   },
   "teamColorPalette": {
     "Navy": "#000088",
