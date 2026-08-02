@@ -28,6 +28,7 @@ export class Player extends Phaser.GameObjects.Graphics {
         this.origY = config.initialY;
         this.baseAngle = config.team === "Home" ? 0 : awayInitialBaseAngle;
         this.currentAngle = this.baseAngle;
+        this.stripeXMultiplier = 1;
         this.initialVeerMomentum = (Math.random() - 0.5) * 0.01;
         this.veerMomentum = this.initialVeerMomentum;
         this.initialVeerTargetDirection = Math.random() < 0.5 ? 1 : -1;
@@ -90,12 +91,17 @@ export class Player extends Phaser.GameObjects.Graphics {
         );
 
         this.fillStyle(FRONT_STRIPE_COLOR, 1);
+        const stripeXMultiplier = this.stripeXMultiplier ?? 1;
         for (const xOffset of FRONT_STRIPE_X_OFFSETS) {
             this.fillRect(
-                xOffset - FRONT_STRIPE_WIDTH / 2, -FRONT_STRIPE_HEIGHT / 2,
+                xOffset * stripeXMultiplier - FRONT_STRIPE_WIDTH / 2, -FRONT_STRIPE_HEIGHT / 2,
                 FRONT_STRIPE_WIDTH, FRONT_STRIPE_HEIGHT
             );
         }
+    }
+
+    get facingAngle() {
+        return this.currentAngle + (this.stripeXMultiplier === -1 ? Math.PI : 0);
     }
 
     stop() {
@@ -130,6 +136,13 @@ export class Player extends Phaser.GameObjects.Graphics {
             this.currentAngle = this.baseAngle;
             this.veerMomentum = this.initialVeerMomentum;
             this.veerTargetDirection = this.initialVeerTargetDirection;
+
+            const onOffense = this.team === game.possession;
+            const absoluteFacing = onOffense === game.offenseMovingRight ? 1 : -1;
+            this.stripeXMultiplier = this.team === "Home" ? absoluteFacing : -absoluteFacing;
+            if (this._fillColor !== undefined) {
+                this.fillColor = this._fillColor;
+            }
 
             const losX = game.lineOfScrimmage.x;
             const isOffense = this.team === game.possession;

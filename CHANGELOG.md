@@ -26,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Player facing (the front stripes on each player, and the rotation-arrow handle that appears
+  when a player is selected) now flips at every quarter change to match the new attack
+  direction. `baseAngle` was fixed per team at construction (Home always right, Away always
+  left), so Q1→Q2 and Q3→Q4 left the offense facing the wrong way when the teams swapped
+  endzones. Movement is unchanged (it already used `directionSign`); only the visuals flip,
+  via a new `stripeXMultiplier` and a `facingAngle` getter derived from
+  `(possession, offenseMovingRight)` in `Player.resetPosition`.
 - `error()` from `logger.js` no longer disappears in a default build: it is now unconditional
   (always routed to `console.error`) instead of being gated by `debug.enabled`, so formation and
   Matter-body failures stay visible to consoles and to the e2e error guard rail. The dead

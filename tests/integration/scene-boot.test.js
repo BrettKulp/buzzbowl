@@ -447,6 +447,29 @@ describe('save on tackle', () => {
 });
 
 describe('end of quarter', () => {
+    // The front stripes on each player mark which way they face: the offense faces the endzone
+    // it drives toward, the defense faces the oncoming offense. stripeXMultiplier flips the
+    // stripes' side (the only thing that may change -- baseAngle drives movement and stays
+    // fixed per team), so it must match the direction after every quarter change flips
+    // possession and/or the attack direction.
+    function expectFacingMatchesAttackDirection() {
+        const normalized = (angle) => ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        for (const player of getAllPlayers(scene)) {
+            const onOffense = player.team === scene.possession;
+            const absoluteFacing = onOffense === scene.offenseMovingRight ? 1 : -1;
+            const expectedMultiplier = player.team === 'Home' ? absoluteFacing : -absoluteFacing;
+            expect(player.stripeXMultiplier, `player ${player.id} facing`).toBe(expectedMultiplier);
+            // baseAngle drives movement (applyMovementForce via currentAngle), so it must stay
+            // fixed per team -- only the stripes are allowed to flip, never the run direction.
+            expect(player.baseAngle, `player ${player.id} baseAngle`).toBe(player.team === 'Home' ? 0 : Math.PI);
+            // The rotation-arrow handle reads facingAngle, not currentAngle, so it must point
+            // toward the attack endzone for the offense (and the oncoming offense for the
+            // defense) after every quarter change.
+            const expectedFacingAngle = onOffense === scene.offenseMovingRight ? 0 : Math.PI;
+            expect(normalized(player.facingAngle), `player ${player.id} arrow facing`).toBeCloseTo(normalized(expectedFacingAngle));
+        }
+    }
+
     it('swaps direction and hands the ball to Away at halftime', () => {
         scene.quarter = 2;
         scene.down = 3;
@@ -461,6 +484,35 @@ describe('end of quarter', () => {
         expect(scene.down).toBe(1);
         expect(scene.lineOfScrimmage.x).toBe(scene.canvasWidth - 600);
         expect(scene.gameClock).toBe(scene.quarterLength);
+        expectFacingMatchesAttackDirection();
+    });
+
+    it('flips both teams\' facing when the attack direction swaps at the end of Q1', () => {
+        scene.quarter = 1;
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.offenseMovingRight = true;
+
+        scene.endQuarter();
+
+        expect(scene.quarter).toBe(2);
+        expect(scene.targetEndzone).toBe('Left');
+        expect(scene.possession).toBe('Home');
+        expectFacingMatchesAttackDirection();
+    });
+
+    it('flips both teams\' facing back to the right at the end of Q3', () => {
+        scene.quarter = 3;
+        scene.possession = 'Away';
+        scene.targetEndzone = 'Left';
+        scene.offenseMovingRight = false;
+
+        scene.endQuarter();
+
+        expect(scene.quarter).toBe(4);
+        expect(scene.targetEndzone).toBe('Right');
+        expect(scene.possession).toBe('Away');
+        expectFacingMatchesAttackDirection();
     });
 
     it('ends the game after the fourth quarter', () => {

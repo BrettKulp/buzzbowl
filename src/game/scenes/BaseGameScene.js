@@ -446,15 +446,15 @@ export class BaseGameScene extends Scene {
                     );
                     deselectAllPlayers(this);
 
-                    const currentAngle = gameObject.currentAngle || 0;
+                    const facingAngle = gameObject.facingAngle ?? 0;
 
                     const arrowSprite = this.add.sprite(
-                        gameObject.x + Math.cos(currentAngle) * 35,
-                        gameObject.y + Math.sin(currentAngle) * 35,
+                        gameObject.x + Math.cos(facingAngle) * 35,
+                        gameObject.y + Math.sin(facingAngle) * 35,
                         'rotationArrows'
                     );
                     arrowSprite.setDepth(9999);
-                    arrowSprite.setRotation(currentAngle + Math.PI / 2);
+                    arrowSprite.setRotation(facingAngle + Math.PI / 2);
 
                     arrowSprite.setInteractive({ useHandCursor: true });
                     arrowSprite.name = 'testDot';
@@ -547,12 +547,12 @@ export class BaseGameScene extends Scene {
                     }
 
                     if (gameObject._testDot) {
-                        const currentAngle = gameObject.currentAngle || 0;
+                        const facingAngle = gameObject.facingAngle ?? 0;
                         const distance = 35;
-                        const newDotX = clampedX + Math.cos(currentAngle) * distance;
-                        const newDotY = dragY + Math.sin(currentAngle) * distance;
+                        const newDotX = clampedX + Math.cos(facingAngle) * distance;
+                        const newDotY = dragY + Math.sin(facingAngle) * distance;
                         gameObject._testDot.setPosition(newDotX, newDotY);
-                        gameObject._testDot.setRotation(currentAngle + Math.PI / 2);
+                        gameObject._testDot.setRotation(facingAngle + Math.PI / 2);
                     }
                 }
 
@@ -567,12 +567,12 @@ export class BaseGameScene extends Scene {
                     gameObject.setPosition(newDotX, newDotY);
                     gameObject.setRotation(angle + Math.PI / 2);
 
-                    player.currentAngle = angle;
+                    player.currentAngle = angle - (player.stripeXMultiplier === -1 ? Math.PI : 0);
 
                     if (player.body) {
-                        this.matter.body.setAngle(player.body, angle);
+                        this.matter.body.setAngle(player.body, player.currentAngle);
                     } else {
-                        player.setRotation(angle);
+                        player.setRotation(player.currentAngle);
                     }
                 }
             },
