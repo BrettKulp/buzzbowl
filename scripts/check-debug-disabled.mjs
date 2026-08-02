@@ -1,19 +1,11 @@
-// Pre-commit guard: debug logging must be off in committed config. Checks the staged copy
-// of config.json (what's actually being committed); if it isn't staged, checks the working
-// tree, since a commit of everything else would still ship the current file later.
+// Pre-commit guard: debug logging must be off in committed config. Reads the staged copy of
+// config.json -- the index is what actually ships -- so local debugging with the working tree
+// left enabled stays unblocked as long as config.json isn't staged.
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 
 const configPath = "src/game/config.json";
 
-let source;
-try {
-    source = execFileSync("git", ["show", `:${configPath}`], { encoding: "utf8" });
-} catch {
-    source = readFileSync(configPath, "utf8");
-}
-
-const config = JSON.parse(source);
+const config = JSON.parse(execFileSync("git", ["show", `:${configPath}`], { encoding: "utf8" }));
 
 if (config.debug?.enabled !== false) {
     console.error(
