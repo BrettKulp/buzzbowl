@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Firebase Analytics is now initialized via `getAnalytics(app)` in `src/firebase.js`
+  (`isSupported()`-gated, exported as `analytics`), so page views and events actually
+  report to the `G-K1299BBCG7` web stream instead of the app initializing silently.
+  Collection is restricted to `buzzbowl.org` and `www.buzzbowl.org` so local/dev
+  environments don't pollute the stream.
 - The pre-commit hook now blocks commits that stage `src/game/config.json` with
   `debug.enabled: true` (`scripts/check-debug-disabled.mjs`). It inspects the staged copy of
   the file, so local debugging with logging on stays unblocked as long as the file isn't

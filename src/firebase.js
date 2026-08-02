@@ -1,5 +1,6 @@
 // firebase.js
 import { initializeApp } from 'firebase/app'
+import { getAnalytics, isSupported } from 'firebase/analytics'
 import { getFirestore } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -12,5 +13,16 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 }
 
+const ANALYTICS_HOSTNAMES = ['buzzbowl.org', 'www.buzzbowl.org']
+const isAnalyticsHost = ANALYTICS_HOSTNAMES.includes(window.location.hostname)
+
 const app = initializeApp(firebaseConfig)
 export const db = getFirestore(app)
+
+let analytics = null
+isSupported().then((supported) => {
+  if (supported && isAnalyticsHost) {
+    analytics = getAnalytics(app)
+  }
+})
+export { analytics }
