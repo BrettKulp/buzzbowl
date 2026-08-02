@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The pre-commit hook now blocks commits that stage `src/game/config.json` with
+  `debug.enabled: true` (`scripts/check-debug-disabled.mjs`). It inspects the staged copy of
+  the file, so local debugging with logging on stays unblocked as long as the file isn't
+  staged.
+
+### Fixed
+
+- A completed pass to a receiver who was already touching a defender or the sideline no
+  longer goes undetected: `collisionstart` only fires when a contact *begins*, and that pair's
+  original contact was skipped because neither body had the ball yet, so no tackle registered
+  until the bodies separated and re-collided. The collision pair logic was extracted into
+  `src/game/collisionHandling.js` and is now also wired to Matter's `collisionactive`
+  event, which fires every tick for ongoing contacts. A `scored` guard prevents the touchdown
+  branch from re-firing (and re-awarding points) each tick during the celebration window, and
+  the per-tick `collision` log only runs on `collisionstart` (new contacts) so the console is
+  not flooded once the category is enabled.
+
 ### Changed
 
 - Reworked debug logging: `log` is gated by `debug.enabled` in
@@ -109,6 +128,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   past what actually fits above the fold.
 ### Added
 
+- `tests/unit/collisionHandling.test.js` covering `handleCollisionPairs` on a fake game (no
+  Phaser): a receiver catching while already touching the sideline is ruled down on the next
+  `collisionactive` tick, an ongoing opposing contact tackles the carrier, the `scored` guard
+  suppresses the re-firing touchdown, and collisions before the snap are ignored.
+- `tests/integration/scene-boot.test.js` now proves the `collisionactive` subscription reaches
+  `handleTackle` by emitting the event on the Matter world directly (fails if the subscription
+  is dropped).
 - `tests/unit/logger.test.js` covering the debug-logger contract: `error()` emits when
   `debug.enabled` is false while `log`/`warn` stay silent, a per-category toggle silences only
   its own category, and unknown categories default to off.

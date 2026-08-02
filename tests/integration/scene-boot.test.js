@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Phaser from 'phaser';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
 import { getAllPlayers, getHomePlayers, getAwayPlayers, yardsToPixels } from '../../src/game/helpers.js';
@@ -91,6 +91,31 @@ describe('scene boot', () => {
 
         expect(scene.down).toBe(2);
         expect(scene.lineOfScrimmage.x).toBe(680);
+    });
+});
+
+describe('collisionactive wiring', () => {
+    // The bug in #27 was never in the pair loop -- that code is unchanged from before. It was
+    // that only collisionstart was subscribed, so a receiver already touching a defender or
+    // the sideline at the catch was never re-evaluated when possession changed. Emitting
+    // collisionactive directly proves the subscription the fix added reaches handleTackle;
+    // Phaser's World is an EventEmitter and the handler is registered with .on, so no physics
+    // step is needed. This fails if the collisionactive subscription is dropped.
+    it('routes an ongoing carrier/defender contact into handleTackle', () => {
+        scene.possession = 'Home';
+        scene.targetEndzone = 'Right';
+        scene.startPlay();
+
+        const ballCarrier = { hasBall: true, team: 'Home', entityType: 'Player', x: 650, id: 'carrier' };
+        const defender = { hasBall: false, team: 'Away', entityType: 'Player', x: 650, id: 'defender' };
+
+        const tackleSpy = vi.spyOn(scene, 'handleTackle');
+
+        scene.matter.world.emit('collisionactive', {
+            pairs: [{ bodyA: { gameObject: ballCarrier }, bodyB: { gameObject: defender } }],
+        });
+
+        expect(tackleSpy).toHaveBeenCalledWith(ballCarrier, defender);
     });
 });
 
