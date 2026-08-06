@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `config.json`, the never-read `initialAngle` recorded when the rotation-arrow handle starts
   being dragged, and the never-called `Player.setBaseAngle`. None of these were referenced
   anywhere at runtime.
+- Removed the never-read `rotatingPlayer` field from `BaseGameScene`, and the duplicate
+  rotation-handle cleanup branch in `dragend` that the arrow sprite's `.player` early-return
+  had already made unreachable (dropping the handle never cleared `draggingRotationHandle` or
+  restored its alpha).
 
 ### Fixed
 
@@ -57,9 +61,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when a player is selected) now flips at every quarter change to match the new attack
   direction. `baseAngle` was fixed per team at construction (Home always right, Away always
   left), so Q1→Q2 and Q3→Q4 left the offense facing the wrong way when the teams swapped
-  endzones. Movement is unchanged (it already used `directionSign`); only the visuals flip,
-  via a new `stripeXMultiplier` and a `facingAngle` getter derived from
-  `(possession, offenseMovingRight)` in `Player.resetPosition`.
+  endzones. Movement is unchanged (it already used `directionSign`); only the visuals flip.
+  `getPlayerUIDirection()` is a live method derived from the scene's `(possession,
+  offenseMovingRight)` state, and `facingAngle` is derived from `currentAngle` plus that
+  multiplier -- so facing stays correct even on a resume-from-save boot, where the old
+  `resetPosition`-only derivation never ran and left everyone facing the stale Q1 direction.
+  Rotation also works in the flipped direction now: dragging the rotation-arrow handle keeps a
+  player running toward the arrow after a quarter swap, and dropping the handle always clears
+  it and restores its opacity (the `dragend` early-return for the arrow sprite used to skip
+  that cleanup).
 - `error()` from `logger.js` no longer disappears in a default build: it is now unconditional
   (always routed to `console.error`) instead of being gated by `debug.enabled`, so formation and
   Matter-body failures stay visible to consoles and to the e2e error guard rail. The dead

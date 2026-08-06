@@ -414,10 +414,6 @@ export class BaseGameScene extends Scene {
                     this.draggedPlayer = null;
                 }
 
-                if (gameObject.player) {
-                    this.rotatingPlayer = gameObject.player;
-                }
-
                 if (!this.playStarted && gameObject.name === 'testDot' && gameObject.player) {
                     this.draggingRotationHandle = {
                         dot: gameObject,
@@ -442,7 +438,7 @@ export class BaseGameScene extends Scene {
                     );
                     deselectAllPlayers(this);
 
-                    const facingAngle = gameObject.facingAngle ?? 0;
+                    const facingAngle = gameObject.facingAngle;
 
                     const arrowSprite = this.add.sprite(
                         gameObject.x + Math.cos(facingAngle) * 35,
@@ -543,7 +539,7 @@ export class BaseGameScene extends Scene {
                     }
 
                     if (gameObject._testDot) {
-                        const facingAngle = gameObject.facingAngle ?? 0;
+                        const facingAngle = gameObject.facingAngle;
                         const distance = 35;
                         const newDotX = clampedX + Math.cos(facingAngle) * distance;
                         const newDotY = dragY + Math.sin(facingAngle) * distance;
@@ -563,13 +559,7 @@ export class BaseGameScene extends Scene {
                     gameObject.setPosition(newDotX, newDotY);
                     gameObject.setRotation(angle + Math.PI / 2);
 
-                    player.currentAngle = angle - (player.stripeXMultiplier === -1 ? Math.PI : 0);
-
-                    if (player.body) {
-                        this.matter.body.setAngle(player.body, player.currentAngle);
-                    } else {
-                        player.setRotation(player.currentAngle);
-                    }
+                    player.facingAngle = angle;
                 }
             },
             this
@@ -579,7 +569,10 @@ export class BaseGameScene extends Scene {
             "dragend",
             (pointer, gameObject) => {
                 if (gameObject.player) {
-                    this.rotatingPlayer = null;
+                    if (this.draggingRotationHandle && gameObject === this.draggingRotationHandle.dot) {
+                        gameObject.setAlpha(1);
+                        this.draggingRotationHandle = null;
+                    }
                     return;
                 }
 
@@ -594,10 +587,6 @@ export class BaseGameScene extends Scene {
                             y: gameObject.y,
                         });
                     }
-                }
-                if (this.draggingRotationHandle && gameObject === this.draggingRotationHandle.dot) {
-                    gameObject.setAlpha(1);
-                    this.draggingRotationHandle = null;
                 }
                 this.draggedPlayer = null;
             },
@@ -850,17 +839,17 @@ export class BaseGameScene extends Scene {
             const dt = delta / 16.667;
             const endzoneDir = this.targetEndzone === "Right" ? 1 : -1;
 
+            const veerParams = {
+                veerTargetFlipChance: this.veerTargetFlipChance,
+                maxVeerMomentum: this.maxVeerMomentum,
+                veerCorrectionRate: this.veerCorrectionRate,
+                veerInertiaFactor: this.veerInertiaFactor,
+                maxVeerAngle: this.maxVeerAngle
+            };
+
             for (let i = 0; i < allPlayers.length; i++) {
                 const player = allPlayers[i];
                 if (!player.body || !player.active) continue;
-
-                const veerParams = {
-                    veerTargetFlipChance: this.veerTargetFlipChance,
-                    maxVeerMomentum: this.maxVeerMomentum,
-                    veerCorrectionRate: this.veerCorrectionRate,
-                    veerInertiaFactor: this.veerInertiaFactor,
-                    maxVeerAngle: this.maxVeerAngle
-                };
 
                 player.updateVeer(dt, veerParams);
 

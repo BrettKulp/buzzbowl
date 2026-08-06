@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import Phaser from 'phaser';
 import { StandardGameScene } from '../../src/game/scenes/StandardGameScene.js';
 import { getAllPlayers, getHomePlayers, getAwayPlayers, yardsToPixels } from '../../src/game/helpers.js';
-import { hasSave, loadGame } from '../../src/game/saveGame.js';
+import { hasSave, loadGame, saveGame } from '../../src/game/saveGame.js';
 
 let game;
 let scene;
@@ -472,18 +472,16 @@ describe('save on tackle', () => {
 });
 
 describe('end of quarter', () => {
-    // The front stripes on each player mark which way they face: the offense faces the endzone
-    // it drives toward, the defense faces the oncoming offense. stripeXMultiplier flips the
-    // stripes' side (the only thing that may change -- baseAngle drives movement and stays
-    // fixed per team), so it must match the direction after every quarter change flips
-    // possession and/or the attack direction.
+    const normalized = (angle) => ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+    // The front stripes and the rotation-arrow handle mark which way each player faces: the
+    // offense faces the endzone it drives toward, the defense faces the oncoming offense.
+    // facingAngle is derived live from (possession, offenseMovingRight, team) via the
+    // getPlayerUIDirection() multiplier, so it must match the attack direction after every
+    // quarter change flips possession and/or the attack direction.
     function expectFacingMatchesAttackDirection() {
-        const normalized = (angle) => ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
         for (const player of getAllPlayers(scene)) {
             const onOffense = player.team === scene.possession;
-            const absoluteFacing = onOffense === scene.offenseMovingRight ? 1 : -1;
-            const expectedMultiplier = player.team === 'Home' ? absoluteFacing : -absoluteFacing;
-            expect(player.stripeXMultiplier, `player ${player.id} facing`).toBe(expectedMultiplier);
             // baseAngle drives movement (applyMovementForce via currentAngle), so it must stay
             // fixed per team -- only the stripes are allowed to flip, never the run direction.
             expect(player.baseAngle, `player ${player.id} baseAngle`).toBe(player.team === 'Home' ? 0 : Math.PI);
@@ -548,6 +546,32 @@ describe('end of quarter', () => {
         expect(scene.quarterText.text).toBe('FINAL');
         // The clock must not roll over into a fifth quarter.
         expect(scene.quarter).toBe(4);
+    });
+});
+
+describe('resume from save', () => {
+    // A save taken mid-game can hold (possession === "Home") !== offenseMovingRight (e.g. Q2,
+    // Home driving left). On resume the boot path never calls resetPosition, so a stored
+    // facing value would come up stale -- but facingAngle is derived live from the loaded
+    // scene state, so it must be correct the moment create() paints the players.
+    it('boots with the correct facing from a save taken mid-quarter', async () => {
+        scene.possession = 'Home';
+        scene.offenseMovingRight = false;
+        scene.targetEndzone = 'Left';
+        scene.quarter = 2;
+        scene.down = 2;
+        saveGame(scene);
+
+        const created = new Promise((resolve) => scene.events.once('create', resolve));
+        game.scene.start('StandardGame', { resume: true });
+        await created;
+
+        const normalized = (angle) => ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        for (const player of getAllPlayers(scene)) {
+            const onOffense = player.team === scene.possession;
+            const expectedFacingAngle = onOffense === scene.offenseMovingRight ? 0 : Math.PI;
+            expect(normalized(player.facingAngle), `player ${player.id} arrow facing`).toBeCloseTo(normalized(expectedFacingAngle));
+        }
     });
 });
 
