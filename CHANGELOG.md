@@ -48,8 +48,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PlayStateManager.handleTackle` no longer throws when the "tackler" is an EndZone or SideLine
   entity (they have no `logPlayer` method).
 
+### Removed
+
+- Removed the unused `rotationHandle` circle (created per-player in `Player`, positioned from
+  `currentAngle` in the scene `update` loop, but never shown), its `rotationHandle` color in
+  `config.json`, the never-read `initialAngle` recorded when the rotation-arrow handle starts
+  being dragged, and the never-called `Player.setBaseAngle`. None of these were referenced
+  anywhere at runtime.
+- Removed the never-read `rotatingPlayer` field from `BaseGameScene`, and the duplicate
+  rotation-handle cleanup branch in `dragend` that the arrow sprite's `.player` early-return
+  had already made unreachable (dropping the handle never cleared `draggingRotationHandle` or
+  restored its alpha).
+
 ### Fixed
 
+- Player facing (the front stripes on each player, and the rotation-arrow handle that appears
+  when a player is selected) now flips at every quarter change to match the new attack
+  direction. `baseAngle` was fixed per team at construction (Home always right, Away always
+  left), so Q1→Q2 and Q3→Q4 left the offense facing the wrong way when the teams swapped
+  endzones. Movement is unchanged (it already used `directionSign`); only the visuals flip.
+  `getPlayerUIDirection()` is a live method derived from the scene's `(possession,
+  offenseMovingRight)` state, and `facingAngle` is derived from `currentAngle` plus that
+  multiplier -- so facing stays correct even on a resume-from-save boot, where the old
+  `resetPosition`-only derivation never ran and left everyone facing the stale Q1 direction.
+  Rotation also works in the flipped direction now: dragging the rotation-arrow handle keeps a
+  player running toward the arrow after a quarter swap, and dropping the handle always clears
+  it and restores its opacity (the `dragend` early-return for the arrow sprite used to skip
+  that cleanup).
 - `error()` from `logger.js` no longer disappears in a default build: it is now unconditional
   (always routed to `console.error`) instead of being gated by `debug.enabled`, so formation and
   Matter-body failures stay visible to consoles and to the e2e error guard rail. The dead

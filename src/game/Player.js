@@ -68,13 +68,6 @@ export class Player extends Phaser.GameObjects.Graphics {
             scene.matter.body.setVelocity(this.body, { x: 0, y: 0 });
             scene.matter.body.setAngularVelocity(this.body, 0);
         }
-
-        this.rotationHandle = scene.add.circle(x, y + 40, 8, gameConfig.colors.rotationHandle);
-        this.rotationHandle.setVisible(false);
-        this.rotationHandle.setInteractive({ useHandCursor: true });
-        this.rotationHandle.player = this;
-        this.rotationHandle.setDepth(100);
-        scene.input.setDraggable(this.rotationHandle);
     }
 
     get fillColor() {
@@ -92,9 +85,26 @@ export class Player extends Phaser.GameObjects.Graphics {
         this.fillStyle(FRONT_STRIPE_COLOR, 1);
         for (const xOffset of FRONT_STRIPE_X_OFFSETS) {
             this.fillRect(
-                xOffset - FRONT_STRIPE_WIDTH / 2, -FRONT_STRIPE_HEIGHT / 2,
+                xOffset * this.getPlayerUIDirection() - FRONT_STRIPE_WIDTH / 2, -FRONT_STRIPE_HEIGHT / 2,
                 FRONT_STRIPE_WIDTH, FRONT_STRIPE_HEIGHT
             );
+        }
+    }
+
+    getPlayerUIDirection() {
+        const onOffense = this.team === this.scene.possession;
+        const absoluteFacing = onOffense === this.scene.offenseMovingRight ? 1 : -1;
+        return this.team === "Home" ? absoluteFacing : -absoluteFacing;
+    }
+
+    get facingAngle() {
+        return this.currentAngle + (this.getPlayerUIDirection() === -1 ? Math.PI : 0);
+    }
+
+    set facingAngle(angle) {
+        this.currentAngle = angle - (this.getPlayerUIDirection() === -1 ? Math.PI : 0);
+        if (this.body) {
+            this.scene.matter.body.setAngle(this.body, this.currentAngle);
         }
     }
 
@@ -130,6 +140,8 @@ export class Player extends Phaser.GameObjects.Graphics {
             this.currentAngle = this.baseAngle;
             this.veerMomentum = this.initialVeerMomentum;
             this.veerTargetDirection = this.initialVeerTargetDirection;
+
+            this.fillColor = this._fillColor;
 
             const losX = game.lineOfScrimmage.x;
             const isOffense = this.team === game.possession;
@@ -265,16 +277,6 @@ export class Player extends Phaser.GameObjects.Graphics {
         if (this._testDot) {
             this._testDot.destroy();
             this._testDot = null;
-        }
-    }
-
-    setBaseAngle(angle) {
-        this.baseAngle = angle;
-        this.currentAngle = angle;
-        if (this.body) {
-            this.scene.matter.body.setAngle(this.body, angle);
-        } else {
-            this.setRotation(angle);
         }
     }
 
