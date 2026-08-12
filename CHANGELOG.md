@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `aimToTarget` in `PassManager.js` now reads the `passing` config directly instead of taking
+  it as a `tuning` parameter; the exported function's signature drops that argument.
+
 ### Added
 
 - Retro Bowl-style drag-aimed passing: pause the play, press and drag back from the QB to set

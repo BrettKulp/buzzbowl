@@ -2,14 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { aimToTarget, findPassOutcome } from '../../src/game/PassManager.js';
 import config from '../../src/game/configLoader.js';
 
-const tuning = config.passing;
+const passingConfig = config.passing;
 const wideBounds = { left: -10000, right: 10000, top: -10000, bottom: 10000 };
 
 describe('aimToTarget', () => {
     it('projects the target forward of the QB on a backward drag', () => {
         const origin = { x: 500, y: 450 };
         // Drag left (away from the intended throw direction) -- the throw must land to the right.
-        const target = aimToTarget(origin, origin.x - 50, origin.y, wideBounds, tuning);
+        const target = aimToTarget(origin, origin.x - 50, origin.y, wideBounds);
 
         expect(target).not.toBeNull();
         expect(target.x).toBeGreaterThan(origin.x);
@@ -20,18 +20,18 @@ describe('aimToTarget', () => {
         const origin = { x: 500, y: 450 };
 
         const shortDrag = 50;
-        const short = aimToTarget(origin, origin.x - shortDrag, origin.y, wideBounds, tuning);
-        expect(Math.abs(short.x - origin.x)).toBeCloseTo(shortDrag * tuning.dragToDistanceMultiplier);
+        const short = aimToTarget(origin, origin.x - shortDrag, origin.y, wideBounds);
+        expect(Math.abs(short.x - origin.x)).toBeCloseTo(shortDrag * passingConfig.dragToDistanceMultiplier);
 
-        const hugeDrag = aimToTarget(origin, origin.x - 10000, origin.y, wideBounds, tuning);
-        expect(Math.abs(hugeDrag.x - origin.x)).toBeCloseTo(tuning.maxRangePixels);
+        const hugeDrag = aimToTarget(origin, origin.x - 10000, origin.y, wideBounds);
+        expect(Math.abs(hugeDrag.x - origin.x)).toBeCloseTo(passingConfig.maxRangePixels);
     });
 
     it('clamps the landing spot inside the field rect', () => {
         const origin = { x: 500, y: 450 };
         const tightBounds = { left: 490, right: 510, top: 440, bottom: 460 };
 
-        const target = aimToTarget(origin, origin.x - 200, origin.y, tightBounds, tuning);
+        const target = aimToTarget(origin, origin.x - 200, origin.y, tightBounds);
 
         expect(target.x).toBe(tightBounds.right);
         expect(target.y).toBeGreaterThanOrEqual(tightBounds.top);
@@ -40,7 +40,7 @@ describe('aimToTarget', () => {
 
     it('returns null for a drag under minDragPixels, so a click cannot commit a lob', () => {
         const origin = { x: 500, y: 450 };
-        const target = aimToTarget(origin, origin.x - (tuning.minDragPixels - 1), origin.y, wideBounds, tuning);
+        const target = aimToTarget(origin, origin.x - (passingConfig.minDragPixels - 1), origin.y, wideBounds);
         expect(target).toBeNull();
     });
 });
@@ -51,11 +51,11 @@ describe('findPassOutcome', () => {
     it('gives the catch to the nearest eligible receiver inside the radius', () => {
         const players = [
             receiver({ id: 'near', x: 500, y: 450 + 5 }),
-            receiver({ id: 'far', x: 500, y: 450 + tuning.catchRadiusPixels - 5 }),
+            receiver({ id: 'far', x: 500, y: 450 + passingConfig.catchRadiusPixels - 5 }),
         ];
 
         const result = findPassOutcome({ x: 500, y: 450 }, players, {
-            catchRadiusPixels: tuning.catchRadiusPixels,
+            catchRadiusPixels: passingConfig.catchRadiusPixels,
             possession: 'Home',
         });
 
@@ -70,7 +70,7 @@ describe('findPassOutcome', () => {
         ];
 
         const result = findPassOutcome({ x: 500, y: 450 }, players, {
-            catchRadiusPixels: tuning.catchRadiusPixels,
+            catchRadiusPixels: passingConfig.catchRadiusPixels,
             possession: 'Home',
         });
 
@@ -80,11 +80,11 @@ describe('findPassOutcome', () => {
 
     it('is incomplete when nobody is within the catch radius', () => {
         const players = [
-            receiver({ id: 'receiver', x: 500, y: 450 + tuning.catchRadiusPixels + 1 }),
+            receiver({ id: 'receiver', x: 500, y: 450 + passingConfig.catchRadiusPixels + 1 }),
         ];
 
         const result = findPassOutcome({ x: 500, y: 450 }, players, {
-            catchRadiusPixels: tuning.catchRadiusPixels,
+            catchRadiusPixels: passingConfig.catchRadiusPixels,
             possession: 'Home',
         });
 
@@ -99,7 +99,7 @@ describe('findPassOutcome', () => {
         ];
 
         const result = findPassOutcome({ x: 500, y: 450 }, players, {
-            catchRadiusPixels: tuning.catchRadiusPixels,
+            catchRadiusPixels: passingConfig.catchRadiusPixels,
             possession: 'Home',
         });
 

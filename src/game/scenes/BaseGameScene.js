@@ -964,6 +964,7 @@ export class BaseGameScene extends Scene {
         // launchIfAimed() must run after startPlay(): startPlay() reads the current ball
         // carrier to seed the stuck-detector anchors, so the QB must still be holding the
         // ball at that point.
+        // start the pass if usind advanced passing and pass was attempted during pause
         this.passManager.launchIfAimed();
         // Defensive: no live path reaches a snap while reviewing today (every play-ending
         // pause passes ballCarrierDown, so Start stays disabled). Kept because a stale

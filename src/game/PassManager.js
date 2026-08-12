@@ -7,13 +7,13 @@ const passingConfig = config.passing;
 // Slingshot inversion: the throw lands on the opposite side of the origin from the drag
 // point, scaled by drag distance. Field clamp last -- landing spots are guaranteed on-field
 // so resolution never needs an out-of-bounds rule.
-export function aimToTarget(origin, dragX, dragY, bounds, tuning) {
+export function aimToTarget(origin, dragX, dragY, bounds) {
     const dx = dragX - origin.x;
     const dy = dragY - origin.y;
     const dragDistance = Math.hypot(dx, dy);
-    if (dragDistance < tuning.minDragPixels) return null;
+    if (dragDistance < passingConfig.minDragPixels) return null;
 
-    const throwDistance = Math.min(dragDistance * tuning.dragToDistanceMultiplier, tuning.maxRangePixels);
+    const throwDistance = Math.min(dragDistance * passingConfig.dragToDistanceMultiplier, passingConfig.maxRangePixels);
     const scale = throwDistance / dragDistance;
 
     const x = Math.max(bounds.left, Math.min(bounds.right, origin.x - dx * scale));
@@ -93,7 +93,7 @@ export class PassManager {
     updateAim(gameObject, dragX, dragY) {
         if (!this.isAiming || gameObject !== this.aimingPlayer) return false;
 
-        this.aimTarget = aimToTarget(this.aimOrigin, dragX, dragY, this.fieldBounds(), passingConfig);
+        this.aimTarget = aimToTarget(this.aimOrigin, dragX, dragY, this.fieldBounds());
         this.drawPreview();
         return true;
     }
