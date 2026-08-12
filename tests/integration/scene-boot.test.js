@@ -584,6 +584,41 @@ describe('drag-aimed pass', () => {
         expect(scene.passManager.ballInFlight()).toBeNull(); // nothing launches
     });
 
+    it('clears the aim preview and catch reticle the moment a throw launches, not just when it resolves', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        scene.passManager.commitAim(passer);
+
+        const clearSpy = vi.spyOn(scene.passManager.aimGraphics, 'clear');
+        scene.startPlay(); // launches -- the dotted preview/reticle are aiming UI, done once the throw is committed
+        expect(clearSpy).toHaveBeenCalled();
+    });
+
+    // Also covers launchIfAimed()'s !carrier bail-out: with nobody found holding the ball,
+    // nothing else would ever clear a stale preview left drawn from a prior aim.
+    it('clears the aim preview even if launching finds no carrier holding the ball', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        scene.passManager.commitAim(passer);
+        passer.hasBall = false; // simulate the carrier lookup finding nobody
+
+        const clearSpy = vi.spyOn(scene.passManager.aimGraphics, 'clear');
+        scene.passManager.launchIfAimed();
+
+        expect(clearSpy).toHaveBeenCalled();
+        expect(scene.passManager.aimTarget).toBeNull();
+    });
+
     it('re-anchors the backward-drift tracker to the catch spot, so a checkdown behind the snap point is not instantly ruled stuck', () => {
         scene.stuckBackwardEnabled = true;
         scene.stuckBackwardYards = 5; // 66px threshold

@@ -142,6 +142,11 @@ export class PassManager {
         if (!this.aimTarget) return;
         const game = this.game;
 
+        // Cleared unconditionally from here down: the preview/reticle are aiming UI, done
+        // being useful the moment a throw is committed to launching -- whether it actually
+        // launches below or the carrier lookup fails and this bails out.
+        this.aimGraphics.clear();
+
         const carrier = getAllPlayers(game).find((p) => p.hasBall && p.teamHasPossession(game));
         if (!carrier) {
             this.aimTarget = null;

@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The dotted aim preview and catch reticle now clear the instant a throw launches instead of
+  lingering on screen through the whole live flight until the pass resolves. This also covers
+  `launchIfAimed()`'s carrier-lookup-fails edge case, where nothing would otherwise ever clear
+  a stale preview left drawn from a prior aim.
 - Toggling offensive or defensive formation while a pass was being aimed, or while one was
   already in flight, silently teleported every player without clearing the pending aim/flight,
   so the throw would launch from or resolve against stale positions. Both
