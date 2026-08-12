@@ -140,6 +140,39 @@ describe('possession changes', () => {
     });
 });
 
+describe('interceptions', () => {
+    it('spots the ball at the pick, resets to 1st down, and flags a pending possession change', () => {
+        const { game, plays } = setup({ down: 3, lineOfScrimmage: losAt(600) });
+
+        plays.handleInterception({ x: 820 });
+
+        expect(game.lineOfScrimmage.x).toBe(820);
+        expect(game.down).toBe(1);
+        expect(game.turnoverOnDowns).toBe(true);
+        expect(game.showInterceptionUI).toHaveBeenCalled();
+    });
+
+    it('hands the ball over without moving the LOS on Next Play', () => {
+        const { game, plays } = setup({ possession: 'Home', lineOfScrimmage: losAt(600) });
+
+        plays.handleInterception({ x: 820 });
+        plays.nextPlay();
+
+        expect(game.possession).toBe('Away');
+        expect(game.lineOfScrimmage.x).toBe(820);
+    });
+
+    it('clamps the LOS to the goal line rather than spotting off-field', () => {
+        const nearLeft = setup({ lineOfScrimmage: losAt(600) });
+        nearLeft.plays.handleInterception({ x: 50 });
+        expect(nearLeft.game.lineOfScrimmage.x).toBe(145);
+
+        const nearRight = setup({ lineOfScrimmage: losAt(600) });
+        nearRight.plays.handleInterception({ x: 1600 });
+        expect(nearRight.game.lineOfScrimmage.x).toBe(1455);
+    });
+});
+
 function losAt(x) {
     return { x, previousX: null, marker: { updateX: vi.fn() } };
 }
@@ -283,6 +316,38 @@ describe('stuck ball carrier', () => {
             carrier.x = 640; // a small step back, short of the threshold
             plays.checkBallCarrierMotion(carrier);
             expect(game.ballCarrierFurthestX).toBe(650);
+        });
+    });
+
+    // Regression: a receiver catching a pass thrown behind the old ball carrier's furthest
+    // point (a checkdown/screen) must not read as having already drifted backward -- the catch
+    // itself has to become the new furthest point, not just the new still-position.
+    describe('resetBallCarrierTracking', () => {
+        it('re-anchors the backward-drift furthest point to the new carrier, so a catch behind the old anchor is not immediately stuck', () => {
+            const { game, plays } = setup({
+                targetEndzone: 'Right',
+                stuckBackwardEnabled: true,
+                stuckBackwardYards: 5,
+                time: { now: 1000 },
+            });
+            game.ballCarrierFurthestX = 900; // stale anchor, e.g. from the QB's snap position
+
+            const receiver = { x: 700 }; // caught well behind the stale anchor
+            plays.resetBallCarrierTracking(receiver);
+            plays.checkBallCarrierMotion(receiver);
+
+            expect(game.handleTackle).not.toHaveBeenCalled();
+            expect(game.ballCarrierFurthestX).toBe(700);
+            expect(game.ballCarrierStillAtX).toBe(700);
+            expect(game.ballCarrierStillSince).toBe(1000);
+        });
+
+        it('nulls the anchors when called with no carrier', () => {
+            const { game, plays } = setup();
+            plays.resetBallCarrierTracking(null);
+
+            expect(game.ballCarrierStillAtX).toBeNull();
+            expect(game.ballCarrierFurthestX).toBeNull();
         });
     });
 });

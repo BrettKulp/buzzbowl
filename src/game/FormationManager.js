@@ -9,6 +9,10 @@ export class FormationManager {
 
     toggleOffensiveFormation() {
         deselectAllPlayers(this.game);
+        // Teleports every offensive player (QB included) to new coordinates below, which would
+        // otherwise leave a pending aim's origin/target, or an in-flight ball's landing spot,
+        // pointing at wherever everyone used to stand.
+        this.game.clearPass();
         this.game.formation = this.game.formation === "I" ? "Gun" : "I";
         if (this.game.formationText) {
             this.game.formationText.setText(this.game.formation);
@@ -65,6 +69,9 @@ export class FormationManager {
 
     toggleDefensiveFormation() {
         deselectAllPlayers(this.game);
+        // Teleports every defender below -- a pending aim's target or an in-flight ball would
+        // otherwise resolve against stale defender positions.
+        this.game.clearPass();
         this.game.defensiveFormation = this.game.defensiveFormation === "4-3" ? "Dime" : "4-3";
         if (this.game.defensiveFormationText) {
             this.game.defensiveFormationText.setText(this.game.defensiveFormation);
@@ -103,6 +110,7 @@ export class FormationManager {
 
     togglePlayType() {
         deselectAllPlayers(this.game);
+        this.game.clearPass();
         this.game.playType = this.game.playType === "Run" ? "Pass" : "Run";
         if (this.game.playTypeText) {
             this.game.playTypeText.setText(this.game.playType);

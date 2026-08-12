@@ -7,10 +7,11 @@ import { Scoreboard } from "../Scoreboard";
 import { FieldMarker } from "../FieldMarker";
 import config from "../configLoader.js";
 import { log } from "../logger";
-import { yardsToPixels, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "../helpers";
+import { yardsToPixels, getAllPlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
 import { PlayRecorder } from "../PlayRecorder";
+import { PassManager } from "../PassManager";
 import { ReviewScrubber } from "../ReviewScrubber";
 import { saveGame, loadGame } from "../saveGame";
 import { loadTeamColors } from "../gameSettings.js";
@@ -37,7 +38,6 @@ export class BaseGameScene extends Scene {
         this.fieldY = this.scoreboardHeight + this.margin;
         this.centerY = this.fieldY + this.fieldHeight / 2;
         this.startY = this.centerY;
-        this.QBPassOffset = config.players.qbPassOffset;
 
         this.startButton = null;
         this.pauseButton = null;
@@ -55,7 +55,6 @@ export class BaseGameScene extends Scene {
         this.veerTargetFlipChance = config.veering.targetFlipChance;
 
         this.downLabels = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
-        this.scramble = false;
 
         this.draggedPlayer = null;
         this.draggingRotationHandle = null;
@@ -63,6 +62,7 @@ export class BaseGameScene extends Scene {
         this.formationManager = null;
         this.playStateManager = null;
         this.playRecorder = null;
+        this.passManager = null;
         this.reviewMode = false;
         this.activeResultPopup = null;
     }
@@ -102,7 +102,6 @@ export class BaseGameScene extends Scene {
         this.playStarted = false;
         this.playPaused = false;
         this.playPausedBeforeSnap = true;
-        this.passAttempted = false;
         this.turnoverOnDowns = false;
         this.offenseMovingRight = true;
         this.targetEndzone = "Right";
@@ -122,6 +121,7 @@ export class BaseGameScene extends Scene {
         this.formationManager = new FormationManager(this);
         this.playStateManager = new PlayStateManager(this);
         this.playRecorder = new PlayRecorder(this);
+        this.passManager = new PassManager(this);
 
         this.createField();
         this.createPlayers();
@@ -404,6 +404,11 @@ export class BaseGameScene extends Scene {
         this.input.on(
             "dragstart",
             (pointer, gameObject) => {
+                if (this.passManager.tryBeginAim(gameObject)) {
+                    this.draggedPlayer = null;
+                    return;
+                }
+
                 if (!this.playStarted && !this.reviewMode) {
                     this.draggedPlayer = gameObject;
                     gameObject.setAlpha(0.7);
@@ -430,7 +435,8 @@ export class BaseGameScene extends Scene {
             (pointer, gameObject) => {
                 log("player", () => `Object clicked: entityType=${gameObject.entityType}`);
 
-                if (!this.playStarted && !this.reviewMode && gameObject.entityType === "Player") {
+                if (!this.playStarted && !this.reviewMode && gameObject.entityType === "Player" &&
+                    !this.passManager.canAim(gameObject)) {
                     log("player", () =>
                         `Player selected: id=${gameObject.id} offPos=${gameObject.offensivePosition} ` +
                         `hasPossession=${gameObject.teamHasPossession(this)} hasBall=${gameObject.hasBall} ` +
@@ -457,43 +463,6 @@ export class BaseGameScene extends Scene {
 
                     gameObject.isSelected = true;
                 }
-
-                if (!this.passAttempted &&
-                    !this.reviewMode &&
-                    gameObject.body &&
-                    this.playType === "Pass" &&
-                    gameObject.offensivePosition !== "QB" &&
-                    (this.playStarted || this.playPaused) && gameObject.teamHasPossession(this) && !this.scramble) {
-
-                    let offensivePlayers;
-
-                    if (this.possession === "Home") {
-                        offensivePlayers = getHomePlayers(this);
-                    } else {
-                        offensivePlayers = getAwayPlayers(this);
-                    }
-
-                    if (gameObject.canReceivePass) {
-                        const rand = Math.random();
-                        if (rand < 0.7) {
-                            const offTeamColor = this.possession === "Home" ? this.homeColor : this.awayColor;
-                            offensivePlayers.forEach(player => {
-                                if (player.hasBall) {
-                                    player.hasBall = false;
-                                    player.fillColor = offTeamColor;
-                                }
-                            });
-
-                            gameObject.hasBall = true;
-                            gameObject.fillColor = this.ballCarrierColor;
-                        } else {
-                            this.handleTackle(null, null, "Incomplete");
-                            this.showIncompleteNextPlay();
-                        }
-
-                        this.passAttempted = true;
-                    }
-                }
             },
             this
         );
@@ -501,6 +470,8 @@ export class BaseGameScene extends Scene {
         this.input.on(
             "drag",
             (pointer, gameObject, dragX, dragY) => {
+                if (this.passManager.updateAim(gameObject, dragX, dragY)) return;
+
                 if (
                     gameObject === this.draggedPlayer &&
                     !this.playStarted &&
@@ -568,6 +539,8 @@ export class BaseGameScene extends Scene {
         this.input.on(
             "dragend",
             (pointer, gameObject) => {
+                if (this.passManager.commitAim(gameObject)) return;
+
                 if (gameObject.player) {
                     if (this.draggingRotationHandle && gameObject === this.draggingRotationHandle.dot) {
                         gameObject.setAlpha(1);
@@ -692,6 +665,12 @@ export class BaseGameScene extends Scene {
 
         this.turnoverPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Turnover on downs!', { width: 340 });
         this.turnoverPopup.onClick(() => {
+            this.nextPlay();
+            this.hideUIPopups();
+        });
+
+        this.interceptionPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Intercepted!', { width: 280 });
+        this.interceptionPopup.onClick(() => {
             this.nextPlay();
             this.hideUIPopups();
         });
@@ -855,14 +834,16 @@ export class BaseGameScene extends Scene {
 
                 const teamSign = player.team === "Home" ? 1 : -1;
                 let directionSign = player.teamHasPossession(this) ? endzoneDir : -endzoneDir;
-                if (this.playType === "Pass" && player.offensivePosition === "QB" && player.teamHasPossession(this)) {
+                if (this.playType === "Pass" && player.offensivePosition === "QB" &&
+                    player.teamHasPossession(this) && player.hasBall) {
                     directionSign = -.01 * endzoneDir;
                 }
                 player.applyMovementForce(dt, baseForceMagnitude, teamSign, directionSign, this.vibrationStrength);
                 this.updateTargetCircle(player);
             }
 
-            this.playRecorder.captureFrame(allPlayers);
+            this.passManager.advance(delta);
+            this.playRecorder.captureFrame(allPlayers, this.passManager.ballInFlight());
         }
 
         this.updateMode(time, delta);
@@ -875,12 +856,9 @@ export class BaseGameScene extends Scene {
     updateTargetCircle(player) {
         if (player.targetCircle && !this.playPaused && this.playType === "Pass" &&
             player.canReceivePass &&
-            player.teamHasPossession(this) && !this.scramble) {
+            player.teamHasPossession(this)) {
             player.targetCircle.setVisible(true);
             player.targetCircle.setPosition(player.x, player.y);
-        }
-        if (player.targetCircle && this.scramble) {
-            player.targetCircle.setVisible(false);
         }
 
         if (!player.teamHasPossession(this) && player.targetCircle) {
@@ -893,6 +871,7 @@ export class BaseGameScene extends Scene {
         this.downPopup.hide();
         this.touchdownPopup.hide();
         this.turnoverPopup.hide();
+        this.interceptionPopup.hide();
         this.activeResultPopup = null;
         deselectAllPlayers(this);
     }
@@ -900,6 +879,11 @@ export class BaseGameScene extends Scene {
     showIncompleteNextPlay() {
         this.incompletePopup.show();
         this.activeResultPopup = this.incompletePopup;
+    }
+
+    showInterceptionUI() {
+        this.interceptionPopup.show();
+        this.activeResultPopup = this.interceptionPopup;
     }
 
     showTouchdownUI() {
@@ -977,15 +961,23 @@ export class BaseGameScene extends Scene {
 
     startPlay() {
         this.playStateManager.startPlay();
+        // launchIfAimed() must run after startPlay(): startPlay() reads the current ball
+        // carrier to seed the stuck-detector anchors, so the QB must still be holding the
+        // ball at that point.
+        this.passManager.launchIfAimed();
         // Defensive: no live path reaches a snap while reviewing today (every play-ending
         // pause passes ballCarrierDown, so Start stays disabled). Kept because a stale
-        // reviewMode would silently block pass targeting for the whole play.
+        // reviewMode would silently block the drag-to-aim gesture for the whole play.
         this.resetReviewUI();
         this.reviewButton.disable();
     }
 
     pausePlay(ballCarrierDown) {
         this.playStateManager.pausePlay(ballCarrierDown);
+    }
+
+    clearPass() {
+        this.passManager.reset();
     }
 
     nextPlay() {
@@ -1019,5 +1011,9 @@ export class BaseGameScene extends Scene {
 
     checkBallCarrierMotion(ballCarrier) {
         this.playStateManager.checkBallCarrierMotion(ballCarrier);
+    }
+
+    resetBallCarrierTracking(carrier) {
+        this.playStateManager.resetBallCarrierTracking(carrier);
     }
 }

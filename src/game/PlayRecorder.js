@@ -24,17 +24,20 @@ export class PlayRecorder {
         this.recording = true;
     }
 
-    captureFrame(players) {
+    captureFrame(players, ball) {
         if (!this.recording || this.frames.length >= MAX_FRAMES) return;
         const frame = {};
         players.forEach((player) => {
             frame[player.id] = { x: player.x, y: player.y, angle: player.currentAngle, hasBall: player.hasBall };
         });
+        frame.ball = ball ? { x: ball.x, y: ball.y, scale: ball.scale } : null;
         this.frames.push(frame);
     }
 
     stop() {
-        if (this.recording) this.captureFrame(getAllPlayers(this.game));
+        // Pass the ball too: an incomplete pass ends with the ball still airborne, and a
+        // one-argument call here would snap it out of the sky on the replay's last frame.
+        if (this.recording) this.captureFrame(getAllPlayers(this.game), this.game.passManager?.ballInFlight());
         this.recording = false;
     }
 
@@ -53,5 +56,6 @@ export class PlayRecorder {
         getAllPlayers(this.game).forEach((player) => {
             if (frame[player.id]) player.applyRecordedFrame(frame[player.id]);
         });
+        this.game.passManager?.applyRecordedBall(frame.ball);
     }
 }

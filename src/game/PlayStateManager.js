@@ -15,14 +15,11 @@ export class PlayStateManager {
         this.game.playPaused = false;
         this.game.playPausedBeforeSnap = false;
         this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
-        this.game.passAttempted = false;
         this.game.snapAt = this.game.time.now;
         this.game.playRecorder.start();
 
         const snapBallCarrier = getAllPlayers(this.game).find(p => p.hasBall);
-        this.game.ballCarrierStillSince = this.game.time.now;
-        this.game.ballCarrierStillAtX = snapBallCarrier ? snapBallCarrier.x : null;
-        this.game.ballCarrierFurthestX = snapBallCarrier ? snapBallCarrier.x : null;
+        this.resetBallCarrierTracking(snapBallCarrier);
         log("play", () =>
             `startPlay: possession=${this.game.possession} down=${this.game.down} ` +
             `LOS=${this.game.lineOfScrimmage.x.toFixed(1)} playType=${this.game.playType} ` +
@@ -49,6 +46,10 @@ export class PlayStateManager {
         // A mid-play Pause passes no ballCarrierDown, so it keeps recording as intended.
         if (ballCarrierDown) {
             this.game.endPlayRecording();
+            // After endPlayRecording(): PlayRecorder.stop() reads passManager.ballInFlight()
+            // for the final frame, so tearing the ball down first would record ball: null and
+            // undo that. Same ordering lesson as the comment on endPlayRecording() itself.
+            this.game.clearPass();
         }
 
         if (!this.game.playStarted) return;
@@ -71,6 +72,8 @@ export class PlayStateManager {
     }
 
     changePossession(keepLOS = false) {
+        this.game.clearPass();
+
         log("play", () =>
             `changePossession: ${this.game.possession} -> ${this.game.possession === "Home" ? "Away" : "Home"} ` +
             `keepLOS=${keepLOS} LOS=${this.game.lineOfScrimmage.x.toFixed(1)}`
@@ -133,6 +136,10 @@ export class PlayStateManager {
 
         this.pausePlay();
         this.game.hideUIPopups();
+        // Covers the review-leak path: exitReviewMode() replays the play's last recorded
+        // frame, which now includes the airborne ball of an incomplete pass, and nothing else
+        // takes it back down before the next snap.
+        this.game.clearPass();
         this.game.playPausedBeforeSnap = true;
         this.game.playStarted = false;
         this.game.playPaused = false;
@@ -180,9 +187,39 @@ export class PlayStateManager {
 
         if (type === "Touchdown") {
             this.handleTouchdown();
+        } else if (type === "Interception") {
+            this.handleInterception(ballCarrier);
         } else {
             this.handleNonTouchdown(tackleX, type);
         }
+    }
+
+    handleInterception(interceptor) {
+        this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
+        // Spotted exactly where the pick happened, with no direction nudge: handleNonTouchdown's
+        // `+ losDir * 30` leans toward the endzone the *old* offense was attacking, which is
+        // backwards once possession flips. Same 145/1455 clamp as handleNonTouchdown -- a pick
+        // in the endzone becomes a touchback by clamp rather than by a rule.
+        const newLOS = Math.max(145, Math.min(1455, interceptor.x));
+        this.game.lineOfScrimmage.x = newLOS;
+        this.game.lineOfScrimmage.marker.updateX(newLOS);
+        this.game.updateLOSBarrier(newLOS);
+
+        // down=1 here, not just via changePossession(true) in nextPlay: handleTackle saves
+        // immediately, and loadGame's turnoverOnDowns branch does not reset the down (only
+        // `scored` does). Without this, a refresh at the popup resumes on 3rd-and-whatever.
+        this.game.down = 1;
+        this.game.scoreboard.updateDown(this.game.downLabels[this.game.down]);
+
+        // Reuses the turnover-on-downs handshake: nextPlay() consumes it as
+        // changePossession(true), which flips possession and keeps the LOS set above. The name
+        // says "on downs"; this is a pick.
+        this.game.turnoverOnDowns = true;
+
+        this.game.showInterceptionUI();
+        this.game.nextPlayButton.enable();
+        this.pausePlay(true);
+        this.game.playStarted = false;
     }
 
     checkBallCarrierMotion(ballCarrier) {
@@ -235,6 +272,18 @@ export class PlayStateManager {
             log("stuck", () => `drifted ${pixelsToYards(backwardPx)}yd back from furthest point`);
             this.game.handleTackle(ballCarrier, null, "Stuck");
         }
+    }
+
+    // Anchors both stuck-detection trackers to a given ball carrier's current position. Called
+    // at snap, and again whenever a pass completion hands the ball to a new carrier -- the QB
+    // is exempt from checkBallCarrierMotion entirely while holding the ball on a Pass play, so
+    // without this the anchors stay frozen at his snap-time position, and a receiver caught
+    // behind that stale point (a checkdown/screen) would fail the backward-drift check on the
+    // very next tick despite not having moved at all.
+    resetBallCarrierTracking(carrier) {
+        this.game.ballCarrierStillSince = this.game.time.now;
+        this.game.ballCarrierStillAtX = carrier ? carrier.x : null;
+        this.game.ballCarrierFurthestX = carrier ? carrier.x : null;
     }
 
     handleTouchdown() {
