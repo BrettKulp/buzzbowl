@@ -70,7 +70,6 @@ export function makeFakeGame(overrides = {}) {
         playStarted: false,
         playPaused: false,
         playPausedBeforeSnap: true,
-        passAttempted: false,
         scored: false,
         turnoverOnDowns: false,
         framesAfterScore: 40,
@@ -101,9 +100,11 @@ export function makeFakeGame(overrides = {}) {
         hideUIPopups: vi.fn(),
         showTouchdownUI: vi.fn(),
         showDownUI: vi.fn(),
+        showInterceptionUI: vi.fn(),
         playRecorder: { start: vi.fn(), stop: vi.fn() },
         endPlayRecording: vi.fn(),
         handleTackle: vi.fn(),
+        clearPass: vi.fn(),
 
         ...rest,
     };

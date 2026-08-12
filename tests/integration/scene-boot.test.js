@@ -334,11 +334,11 @@ describe('play review', () => {
         expect(scene.reviewScrubber.handle.visible).toBe(false);
     });
 
-    // An incomplete pass can be thrown while the play is paused (the receiver-click guard
-    // accepts playStarted || playPaused), so handleTackle can land with playStarted already
-    // false. PlayStateManager.pausePlay() returns early in that case, so anything hung off
-    // the end of it never runs -- and a recorder left running means the next snap appends to
-    // this play instead of replacing it.
+    // An incomplete pass can be thrown while the play is paused (aiming a throw is only ever
+    // allowed while paused -- see PassManager.canAim()), so handleTackle can land with
+    // playStarted already false. PlayStateManager.pausePlay() returns early in that case, so
+    // anything hung off the end of it never runs -- and a recorder left running means the next
+    // snap appends to this play instead of replacing it.
     it('ends the recording on an incomplete pass thrown while paused', () => {
         scene.playType = 'Pass';
         recordAFewFrames();
@@ -392,6 +392,287 @@ describe('play review', () => {
 
         const finalFrame = scene.playRecorder.frames[scene.playRecorder.frameCount - 1];
         expect(finalFrame[ballCarrier.id].x).toBeGreaterThan(scene.rightGoalLineX + 2);
+    });
+});
+
+describe('drag-aimed pass', () => {
+    // Drives scene.passManager directly rather than synthesizing pointer events -- the drag
+    // gesture itself is thin pass-through wiring in setupEventHandlers(); what needs proving
+    // here is the aim-state machine and the outcome/flight integration behind it.
+    function findQB() {
+        return getAllPlayers(scene).find((p) => p.offensivePosition === 'QB' && p.teamHasPossession(scene));
+    }
+
+    // Landing far up near the top sideline, away from every formation row (closest players
+    // sit ~85px away, well outside the 45px catch radius), guarantees nobody is there to
+    // catch or intercept.
+    function openGrassTarget(passer) {
+        return { x: passer.x + 300, y: scene.fieldY + 10 };
+    }
+
+    it('only allows aiming while paused mid-play with the QB holding the ball', () => {
+        scene.changePlayType(); // Run -> Pass
+        const passer = findQB();
+
+        expect(scene.passManager.canAim(passer)).toBe(false); // pre-snap
+
+        scene.startPlay();
+        expect(scene.passManager.canAim(passer)).toBe(false); // live
+
+        scene.update(0, 16);
+        scene.update(16, 16);
+        scene.pausePlay();
+        expect(scene.passManager.canAim(passer)).toBe(true); // paused mid-play, QB holding ball
+
+        scene.enterReviewMode();
+        expect(scene.passManager.canAim(passer)).toBe(false); // reviewing
+        scene.exitReviewMode();
+
+        scene.handleTackle(passer, null, 'Tackle');
+        expect(scene.passManager.canAim(passer)).toBe(false); // play is dead
+    });
+
+    it('gives the ball to a receiver caught within the catch radius, and the play stays live', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        const receiver = getAllPlayers(scene).find((p) => p.teamHasPossession(scene) && p.canReceivePass);
+
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = { x: receiver.x, y: receiver.y };
+
+        scene.startPlay();
+        scene.passManager.advance(999999);
+
+        expect(receiver.hasBall).toBe(true);
+        expect(passer.hasBall).toBe(false);
+        expect(scene.playStarted).toBe(true);
+        expect(scene.passManager.ballInFlight()).toBeNull();
+    });
+
+    it('ends the play incomplete when nobody is near the landing spot, without moving the LOS', () => {
+        scene.changePlayType();
+        scene.lineOfScrimmage.x = 600;
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+
+        scene.startPlay();
+        scene.passManager.advance(999999);
+
+        expect(scene.playStarted).toBe(false);
+        expect(scene.lineOfScrimmage.x).toBe(600);
+        expect(scene.activeResultPopup).toBe(scene.incompletePopup);
+    });
+
+    it('freezes the ball mid-flight on Pause and resumes without launching a second ball', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+
+        scene.startPlay();
+        expect(scene.passManager.ballInFlight()).not.toBeNull();
+
+        scene.passManager.advance(50); // partial flight, still mid-air
+        const midFlight = scene.passManager.ballInFlight();
+        expect(midFlight).not.toBeNull();
+
+        scene.pausePlay(); // mid-play pause (no ballCarrierDown) -- must not clear the ball
+        expect(scene.passManager.ballInFlight()).toEqual(midFlight);
+
+        scene.startPlay(); // resume -- launchIfAimed() must no-op since aimTarget is null
+        expect(scene.passManager.ballInFlight()).toEqual(midFlight);
+    });
+
+    it('clears a previously committed aim if the QB is pressed again without dragging', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        scene.passManager.commitAim(passer);
+        expect(scene.passManager.aimTarget).not.toBeNull();
+
+        // A bare click emits dragstart then dragend with no drag in between (Phaser's drag
+        // thresholds are both 0), so tryBeginAim must null the stale target on its own.
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.commitAim(passer);
+
+        scene.startPlay();
+        expect(scene.passManager.ballInFlight()).toBeNull();
+    });
+
+    it('records the ball position mid-flight, and keeps it on the final frame of an incomplete pass', () => {
+        scene.changePlayType();
+        scene.lineOfScrimmage.x = 600;
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+
+        scene.startPlay();
+        scene.update(0, 16);
+
+        const midFrame = scene.playRecorder.frames[scene.playRecorder.frameCount - 1];
+        expect(midFrame.ball).not.toBeNull();
+
+        // 300px at 700px/s is under half a second -- 40 more ticks at 16ms is ample.
+        for (let i = 1; i <= 40 && scene.playStarted; i++) {
+            scene.update(i * 16, 16);
+        }
+
+        expect(scene.playStarted).toBe(false);
+        const finalFrame = scene.playRecorder.frames[scene.playRecorder.frameCount - 1];
+        expect(finalFrame.ball).not.toBeNull();
+    });
+
+    it('does not leave the ball visible after reviewing an incomplete pass and moving to Next Play', () => {
+        scene.changePlayType();
+        scene.lineOfScrimmage.x = 600;
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+
+        scene.startPlay();
+        for (let i = 0; i <= 40 && scene.playStarted; i++) {
+            scene.update(i * 16, 16);
+        }
+        expect(scene.playStarted).toBe(false);
+        expect(scene.passManager.ball.visible).toBe(false); // cleared when the play ended
+
+        scene.enterReviewMode();
+        scene.exitReviewMode(); // replays the last recorded frame, which now carries the ball
+        expect(scene.passManager.ball.visible).toBe(true); // the leak this test protects against
+
+        scene.nextPlay();
+        expect(scene.passManager.ball.visible).toBe(false);
+    });
+
+    it('clears a pending aim if the offensive formation is toggled before Start', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        expect(scene.passManager.aimTarget).not.toBeNull();
+
+        scene.changeformation(); // I -> Gun, teleports the QB and every receiver
+
+        expect(scene.passManager.aimTarget).toBeNull();
+        expect(scene.passManager.isAiming).toBe(false);
+
+        scene.startPlay();
+        expect(scene.passManager.ballInFlight()).toBeNull(); // nothing launches
+    });
+
+    it('clears the aim preview and catch reticle the moment a throw launches, not just when it resolves', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        scene.passManager.commitAim(passer);
+
+        const clearSpy = vi.spyOn(scene.passManager.aimGraphics, 'clear');
+        scene.startPlay(); // launches -- the dotted preview/reticle are aiming UI, done once the throw is committed
+        expect(clearSpy).toHaveBeenCalled();
+    });
+
+    // Also covers launchIfAimed()'s !carrier bail-out: with nobody found holding the ball,
+    // nothing else would ever clear a stale preview left drawn from a prior aim.
+    it('clears the aim preview even if launching finds no carrier holding the ball', () => {
+        scene.changePlayType();
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+        scene.passManager.commitAim(passer);
+        passer.hasBall = false; // simulate the carrier lookup finding nobody
+
+        const clearSpy = vi.spyOn(scene.passManager.aimGraphics, 'clear');
+        scene.passManager.launchIfAimed();
+
+        expect(clearSpy).toHaveBeenCalled();
+        expect(scene.passManager.aimTarget).toBeNull();
+    });
+
+    it('re-anchors the backward-drift tracker to the catch spot, so a checkdown behind the snap point is not instantly ruled stuck', () => {
+        scene.stuckBackwardEnabled = true;
+        scene.stuckBackwardYards = 5; // 66px threshold
+        scene.changePlayType(); // Run -> Pass, QB now holds the ball
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        const checkdown = getAllPlayers(scene).find(
+            (p) => p.teamHasPossession(scene) && p.canReceivePass && p.offensivePosition === 'RB'
+        );
+        // The I formation's RB starts well behind the QB -- a checkdown here is a real
+        // backward completion, further behind the snap point than the house rule's threshold.
+        expect(Math.abs(checkdown.x - passer.x)).toBeGreaterThan(yardsToPixels(scene.stuckBackwardYards));
+
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = { x: checkdown.x, y: checkdown.y };
+
+        scene.startPlay();
+        scene.passManager.advance(999999); // resolves to a Catch
+        expect(checkdown.hasBall).toBe(true);
+
+        // The tick right after the catch is the first time checkBallCarrierMotion evaluates
+        // the new carrier -- without resetBallCarrierTracking() this fires "Stuck" immediately.
+        scene.update(0, 16);
+
+        expect(scene.playStarted).toBe(true);
+        expect(scene.down).toBe(1);
+    });
+
+    it('records the ball\'s mid-flight arc scale and replays it in Review Play', () => {
+        scene.changePlayType();
+        scene.lineOfScrimmage.x = 600;
+        scene.startPlay();
+        scene.pausePlay();
+
+        const passer = findQB();
+        scene.passManager.tryBeginAim(passer);
+        scene.passManager.aimTarget = openGrassTarget(passer);
+
+        scene.startPlay();
+        scene.update(0, 16); // one tick into flight -- the arc pulse should have grown the ball
+        const midFlightScale = scene.passManager.ball.scaleX;
+        expect(midFlightScale).not.toBe(1);
+
+        const midFlightFrameIndex = scene.playRecorder.frameCount - 1;
+        expect(scene.playRecorder.frames[midFlightFrameIndex].ball.scale).toBeCloseTo(midFlightScale);
+
+        for (let i = 1; i <= 40 && scene.playStarted; i++) scene.update(i * 16, 16);
+        expect(scene.playStarted).toBe(false);
+
+        scene.enterReviewMode();
+        scene.reviewScrubber.setFrame(midFlightFrameIndex);
+        expect(scene.passManager.ball.scaleX).toBeCloseTo(midFlightScale);
     });
 });
 

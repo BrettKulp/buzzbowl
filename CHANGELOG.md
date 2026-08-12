@@ -6,8 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `aimToTarget` in `PassManager.js` now reads the `passing` config directly instead of taking
+  it as a `tuning` parameter; the exported function's signature drops that argument.
+
 ### Added
 
+- Retro Bowl-style drag-aimed passing: pause the play, press and drag back from the QB to set
+  up a throw (a dotted preview and catch reticle show where it will land), then hit Start and
+  the ball flies the drawn path. A new `src/game/PassManager.js` owns the aim state, the ball
+  (a plain circle, not a physics body -- nothing collides with a pass in flight) and its
+  flight; outcome is decided on arrival by proximity, not a coin flip: the nearest eligible
+  player to the landing spot catches it, a closer defender intercepts, and nobody in range is
+  incomplete. An interception ends the play immediately, spots the ball where it was picked
+  off, and hands over possession on 1st down via the same turnover handshake as a downs
+  turnover. New `passing` block in `config.json` tunes drag sensitivity, range, ball speed and
+  catch radius; new `ball`/`aimPreview`/`catchReticle` colors and a `pass` debug category.
 - Firebase Analytics is now initialized via `getAnalytics(app)` in `src/firebase.js`
   (`isSupported()`-gated, exported as `analytics`), so page views and events actually
   report to the `G-K1299BBCG7` web stream instead of the app initializing silently.
@@ -20,6 +35,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The dotted aim preview and catch reticle now clear the instant a throw launches instead of
+  lingering on screen through the whole live flight until the pass resolves. This also covers
+  `launchIfAimed()`'s carrier-lookup-fails edge case, where nothing would otherwise ever clear
+  a stale preview left drawn from a prior aim.
+- Toggling offensive or defensive formation while a pass was being aimed, or while one was
+  already in flight, silently teleported every player without clearing the pending aim/flight,
+  so the throw would launch from or resolve against stale positions. Both
+  `FormationManager.toggleOffensiveFormation()` and `toggleDefensiveFormation()` now clear a
+  pending pass the same way `togglePlayType()` already did.
+- A receiver catching a pass thrown behind the ball carrier's backward-drift tracking point (a
+  checkdown or screen) could be ruled "Stuck" on the very next tick, even though they hadn't
+  moved: the QB is exempt from stuck-detection while holding the ball on a Pass play, so the
+  tracker stayed anchored at his snap-time position through the whole drop-back. Catching a
+  pass now re-anchors both stuck trackers to the catch spot via the new
+  `PlayStateManager.resetBallCarrierTracking()`.
+- The ball's mid-flight arc-pulse scale is now recorded per frame and restored while scrubbing
+  Review Play; previously only its position was recorded, so the ball rendered at a fixed size
+  in replay instead of pulsing through the arc like it did live.
 - A completed pass to a receiver who was already touching a defender or the sideline no
   longer goes undetected: `collisionstart` only fires when a contact *begins*, and that pair's
   original contact was skipped because neither body had the ball yet, so no tackle registered
@@ -32,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The QB no longer back-pedals for the rest of the play after releasing a pass -- the
+  drop-back motion now stops the instant he throws.
 - Reworked debug logging: `log` is gated by `debug.enabled` in
   `config.json` and emits a `[DEBUG:<category>]` prefix, and each log category
   (`collision`, `collisionWithBallCarrier`, `play`, `stuck`, `player`) can be
@@ -50,6 +85,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Removed the old click-a-receiver passing mechanic and its 70% completion coin flip
+  (replaced by drag-aimed passing above), along with the `passAttempted` lock it used
+  (aiming is now structurally limited to once per snap: it requires the QB to be holding the
+  ball, and the ball leaves his hands at launch), the never-set `scramble` flag, and the
+  unused `players.qbPassOffset` config value.
 - Removed the unused `rotationHandle` circle (created per-player in `Player`, positioned from
   `currentAngle` in the scene `update` loop, but never shown), its `rotationHandle` color in
   `config.json`, the never-read `initialAngle` recorded when the rotation-arrow handle starts

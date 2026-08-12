@@ -96,6 +96,21 @@ describe('ball carrier', () => {
     });
 });
 
+describe('pending pass state', () => {
+    // Both formation toggles teleport players (the offense one moves the QB, an aim's origin;
+    // the defense one moves potential interceptors) without touching player.hasBall, so a
+    // pending aim or an in-flight ball must be torn down or it resolves against stale positions.
+    it('clears a pending pass on both offensive and defensive formation toggles', () => {
+        const offense = setup();
+        offense.formations.toggleOffensiveFormation();
+        expect(offense.game.clearPass).toHaveBeenCalled();
+
+        const defense = setup();
+        defense.formations.toggleDefensiveFormation();
+        expect(defense.game.clearPass).toHaveBeenCalled();
+    });
+});
+
 function losAt(x) {
     return { x, previousX: null, marker: { updateX: () => {} } };
 }

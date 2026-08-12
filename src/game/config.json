@@ -7,7 +7,8 @@
       "play": true,
       "stuck": true,
       "player": true,
-      "los": true
+      "los": true,
+      "pass": true
     }
   },
   "colors": {
@@ -24,7 +25,10 @@
     "button": "#444444",
     "buttonHover": "#555555",
     "buttonDisabled": "#888888",
-    "targetCircle": "#FF0000"
+    "targetCircle": "#FF0000",
+    "ball": "#DDBB77",
+    "aimPreview": "#EEEEEE",
+    "catchReticle": "#FFD633"
   },
   "teamColorPalette": {
     "Navy": "#000088",
@@ -62,8 +66,17 @@
   },
   "players": {
     "spacing": 48,
-    "qbPassOffset": 175,
     "canReceivePass": ["WR_1", "WR_2", "RB", "TE/FB", "TE"]
+  },
+  "passing": {
+    "dragToDistanceMultiplier": 2.2,
+    "maxRangePixels": 660,
+    "minDragPixels": 25,
+    "ballSpeedPixelsPerSecond": 700,
+    "catchRadiusPixels": 45,
+    "ballRadiusPixels": 7,
+    "aimDotSpacingPixels": 18,
+    "arcScale": 0.5
   },
   "physics": {
     "vibrationStrength": 0.001,
