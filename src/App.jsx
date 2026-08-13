@@ -22,7 +22,7 @@ function App() {
         <details className="how-to-play">
           <summary>How to play</summary>
           <p>
-            The orange player is the ball carrier. To pass, click the QB and drag to aim at a skill position player
+            The orange player is the ball carrier. To pass, pause the play, click the QB, and drag to aim at a skill position player
             with a red dot when the play type is set to pass. You can also pause the play then
             complete the pass while play is paused. All passes have a 70% chance of completion.
             Click a player and drag the red circle to rotate their position before the play or
