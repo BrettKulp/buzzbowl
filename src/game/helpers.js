@@ -14,6 +14,14 @@ export function getAwayPlayers(game) {
     return game.away.children ? game.away.children.entries : [];
 }
 
+export function getOffensivePlayers(game) {
+    return game.possession === "Home" ? getHomePlayers(game) : getAwayPlayers(game);
+}
+
+export function getDefensivePlayers(game) {
+    return game.possession === "Home" ? getAwayPlayers(game) : getHomePlayers(game);
+}
+
 export function getAllPlayers(game) {
     return [...getHomePlayers(game), ...getAwayPlayers(game)];
 }

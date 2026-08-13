@@ -351,3 +351,41 @@ describe('stuck ball carrier', () => {
         });
     });
 });
+
+describe('scramble', () => {
+    it('sets the scramble flag, clears receiver target circles, and refreshes the button', () => {
+        const { game, plays } = setup();
+        const offensivePlayer = game.home.children.entries[0];
+
+        plays.scramble();
+
+        expect(game.scramble).toBe(true);
+        expect(offensivePlayer.updateTargetCircle).toHaveBeenCalled();
+        expect(game.updateScrambleButton).toHaveBeenCalled();
+    });
+
+    // Regression for "fix pausing and starting play resetting qb scramble state": startPlay()
+    // used to force scramble = false, so pausing a scrambled play and hitting Start again
+    // silently un-scrambled the QB mid-run. Scramble must only clear on the next play, not on
+    // a mid-play pause/resume.
+    it('preserves an active scramble across a mid-play pause and resume', () => {
+        const { game, plays } = setup({ playStarted: true });
+        game.scramble = true;
+
+        plays.pausePlay();
+        expect(game.scramble).toBe(true);
+
+        plays.startPlay();
+        expect(game.scramble).toBe(true);
+    });
+
+    it('clears the scramble only when moving on to the next play', () => {
+        const { game, plays } = setup({ playStarted: true });
+        game.scramble = true;
+
+        plays.nextPlay();
+
+        expect(game.scramble).toBe(false);
+        expect(game.updateScrambleButton).toHaveBeenCalled();
+    });
+});

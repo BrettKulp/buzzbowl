@@ -25,6 +25,7 @@ export function makeFakePlayer(overrides = {}) {
         stop: vi.fn(),
         resetPosition: vi.fn(),
         applyRecordedFrame: vi.fn(),
+        updateTargetCircle: vi.fn(),
         deselect: vi.fn(),
         logPlayer: vi.fn(),
         ...overrides,
@@ -73,6 +74,7 @@ export function makeFakeGame(overrides = {}) {
         scored: false,
         turnoverOnDowns: false,
         framesAfterScore: 40,
+        scramble: false,
 
         lineOfScrimmage: { x: config.field.lineOfScrimmageX, previousX: null, marker: { updateX: vi.fn() } },
         firstDownMarker: { x: config.field.lineOfScrimmageX + 132, marker: { updateX: vi.fn() } },
@@ -89,6 +91,8 @@ export function makeFakeGame(overrides = {}) {
         startButton: { enable: vi.fn(), disable: vi.fn() },
         pauseButton: { enable: vi.fn(), disable: vi.fn() },
         nextPlayButton: { enable: vi.fn(), disable: vi.fn() },
+        scrambleButton: { enable: vi.fn(), disable: vi.fn(), setVisible: vi.fn() },
+        updateScrambleButton: vi.fn(),
         scoreboard: { updateScore: vi.fn(), updateDown: vi.fn() },
 
         matter: { body: { setPosition: vi.fn(), setAngle: vi.fn() } },

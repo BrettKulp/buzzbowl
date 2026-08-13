@@ -1,6 +1,6 @@
 import config from "./configLoader.js";
 import { error } from "./logger";
-import { deselectAllPlayers, getHomePlayers, getAwayPlayers } from "./helpers";
+import { deselectAllPlayers, getOffensivePlayers, getDefensivePlayers } from "./helpers";
 
 export class FormationManager {
     constructor(game) {
@@ -24,7 +24,7 @@ export class FormationManager {
 
         const dirMult = this.game.targetEndzone === "Right" ? 1 : -1;
         const losX = this.game.lineOfScrimmage.x;
-        const offPlayers = this.getOffensivePlayers();
+        const offPlayers = getOffensivePlayers(this.game);
         const formationConfig = config.formations.offense[this.game.formation];
 
         try {
@@ -77,7 +77,7 @@ export class FormationManager {
             this.game.defensiveFormationText.setText(this.game.defensiveFormation);
         }
 
-        const defPlayers = this.getDefensivePlayers();
+        const defPlayers = getDefensivePlayers(this.game);
         const defTeamColor = this.getDefensiveColor();
         const losX = this.game.lineOfScrimmage.x;
         const dirMult = this.game.targetEndzone === "Right" ? 1 : -1;
@@ -115,9 +115,12 @@ export class FormationManager {
         if (this.game.playTypeText) {
             this.game.playTypeText.setText(this.game.playType);
         }
+        if (this.game.updateScrambleButton) {
+            this.game.updateScrambleButton();
+        }
 
         const ballCarrierPosition = this.game.playType === "Pass" ? "QB" : "RB";
-        const offPlayers = this.getOffensivePlayers();
+        const offPlayers = getOffensivePlayers(this.game);
         const offColor = this.getOffensiveColor();
 
         try {
@@ -127,13 +130,7 @@ export class FormationManager {
                 }
 
                 this.applyBallCarrierColor(player, offColor);
-
-                if (this.game.playType === "Pass" && player.canReceivePass) {
-                    player.targetCircle.setPosition(player.x, player.y);
-                    player.targetCircle.setVisible(true);
-                } else if (player.targetCircle) {
-                    player.targetCircle.setVisible(false);
-                }
+                player.updateTargetCircle();
             });
         } catch (e) {
             error("Error processing play type:", e);
@@ -142,7 +139,7 @@ export class FormationManager {
 
     checkBallCarrier() {
         const ballCarrierPosition = this.game.playType === "Run" ? "RB" : "QB";
-        const offPlayers = this.getOffensivePlayers();
+        const offPlayers = getOffensivePlayers(this.game);
         const offColor = this.getOffensiveColor();
 
         try {
@@ -182,14 +179,6 @@ export class FormationManager {
         } else {
             player.fillColor = offColor;
         }
-    }
-
-    getOffensivePlayers() {
-        return this.game.possession === "Home" ? getHomePlayers(this.game) : getAwayPlayers(this.game);
-    }
-
-    getDefensivePlayers() {
-        return this.game.possession === "Home" ? getAwayPlayers(this.game) : getHomePlayers(this.game);
     }
 
     getOffensiveColor() {

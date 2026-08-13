@@ -1,5 +1,5 @@
 import config from "./configLoader.js";
-import { yardsToPixels, pixelsToYards, getHomePlayers, getAwayPlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
+import { yardsToPixels, pixelsToYards, getOffensivePlayers, getDefensivePlayers, getAllPlayers, deselectAllPlayers } from "./helpers.js";
 import { log } from "./logger";
 
 export class PlayStateManager {
@@ -18,7 +18,7 @@ export class PlayStateManager {
         this.game.snapAt = this.game.time.now;
         this.game.playRecorder.start();
 
-        const snapBallCarrier = getAllPlayers(this.game).find(p => p.hasBall);
+        const snapBallCarrier = getOffensivePlayers(this.game).find(p => p.hasBall);
         this.resetBallCarrierTracking(snapBallCarrier);
         log("play", () =>
             `startPlay: possession=${this.game.possession} down=${this.game.down} ` +
@@ -31,13 +31,14 @@ export class PlayStateManager {
         this.game.startButton.disable();
         this.game.nextPlayButton.disable();
         this.game.pauseButton.enable();
+        this.game.updateScrambleButton();
 
         this.forEachPlayer((player) => {
             if (player && player.makeDynamic) {
                 player.makeDynamic();
             }
         });
-    }
+}
 
     pausePlay(ballCarrierDown) {
         // Above the guard below: ballCarrierDown means the play is over, which is true even
@@ -115,6 +116,9 @@ export class PlayStateManager {
         this.setDefensiveTeamColor();
 
         this.resetPlayState();
+        if (this.game.updateScrambleButton) {
+            this.game.updateScrambleButton();
+        }
         this.game.startButton.enable();
         this.game.nextPlayButton.disable();
     }
@@ -155,7 +159,12 @@ export class PlayStateManager {
 
         this.game.checkBallCarrier();
 
-        this.forEachPlayer((player) => this.game.updateTargetCircle(player));
+        this.forEachPlayer((player) => player.updateTargetCircle());
+
+        this.game.scramble = false;
+        if (this.game.updateScrambleButton) {
+            this.game.updateScrambleButton();
+        }
 
         this.game.startButton.enable();
         this.game.nextPlayButton.disable();
@@ -302,6 +311,22 @@ export class PlayStateManager {
         }
     }
 
+    scramble() {
+        this.game.scramble = true;
+        this.updateTargetCircles();
+        if (this.game.updateScrambleButton) {
+            this.game.updateScrambleButton();
+        }
+    }
+
+    updateTargetCircles() {
+        const players = getOffensivePlayers(this.game);
+
+        players.forEach((player) => {
+            player.updateTargetCircle();
+        });
+    }
+
     handleNonTouchdown(tackleX, type) {
         if (type !== "Incomplete") {
             this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
@@ -358,12 +383,12 @@ export class PlayStateManager {
         getAllPlayers(this.game).forEach(player => {
             player.hasBall = false;
             player.fillColor = player.team === "Home" ? this.game.homeColor : this.game.awayColor;
-            this.game.updateTargetCircle(player);
+            player.updateTargetCircle();
         });
     }
 
     setDefensiveTeamColor() {
-        const defPlayers = this.game.possession === "Home" ? getAwayPlayers(this.game) : getHomePlayers(this.game);
+        const defPlayers = getDefensivePlayers(this.game);
         const defTeamColor = this.game.possession === "Home" ? this.game.awayColor : this.game.homeColor;
         defPlayers.forEach(player => { player.fillColor = defTeamColor; });
     }
@@ -374,5 +399,6 @@ export class PlayStateManager {
         this.game.playPaused = false;
         this.game.playPausedBeforeSnap = true;
         this.game.framesAfterScore = 120;
+        this.game.scramble = false;
     }
 }
