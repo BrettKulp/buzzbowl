@@ -8,11 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The receiver target-circle logic moved out of `BaseGameScene.updateTargetCircle()` into a
+  shared `Player.updateTargetCircle()` method driven by one show/hide decision (Pass play, not
+  paused, receiver eligible, on the possessing team, QB not scrambling). It now runs every
+  frame -- including while the play is paused -- so circles clear the moment the play type
+  switches to Run, the play pauses, or the QB scrambles, instead of lingering until the next
+  play. `FormationManager.togglePlayType()` and `PlayStateManager` now call that shared method
+  instead of duplicating the inline show/hide logic.
+- New `getOffensivePlayers()` / `getDefensivePlayers()` helpers in `helpers.js` consolidate
+  the possession-based team lookups that were duplicated across managers. `FormationManager`'s
+  private copies were removed, `PlayStateManager.setDefensiveTeamColor()` and its snap-carrier
+  lookup use the helpers, and `PassManager`'s ball-carrier lookup is scoped to the offensive
+  team only.
 - `aimToTarget` in `PassManager.js` now reads the `passing` config directly instead of taking
   it as a `tuning` parameter; the exported function's signature drops that argument.
 
 ### Added
 
+- A Scramble option for the QB: a new Scramble button appears on Pass plays and lets the QB
+  break the drop-back and run with the ball. The button is hidden on Run plays and disabled
+  once the QB scrambles or the ball leaves his hands (launched pass, completed throw, or pick),
+  so it only exists while the QB actually still has the ball.
 - Retro Bowl-style drag-aimed passing: pause the play, press and drag back from the QB to set
   up a throw (a dotted preview and catch reticle show where it will land), then hit Start and
   the ball flies the drawn path. A new `src/game/PassManager.js` owns the aim state, the ball
@@ -35,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pausing a play and hitting Start again no longer clears an active QB scramble:
+  `PlayStateManager.startPlay()` used to force `scramble = false`, so a scrambled QB silently
+  stopped running after a pause/resume. The flag now only resets when moving on to the next
+  play (`nextPlay()`), and `startPlay()` refreshes the Scramble button so it re-enables the
+  moment the play is live. The Scramble button is also no longer enabled before the snap
+  (it stays disabled until the ball is snapped).
 - The dotted aim preview and catch reticle now clear the instant a throw launches instead of
   lingering on screen through the whole live flight until the pass resolves. This also covers
   `launchIfAimed()`'s carrier-lookup-fails edge case, where nothing would otherwise ever clear
@@ -62,6 +84,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   branch from re-firing (and re-awarding points) each tick during the celebration window, and
   the per-tick `collision` log only runs on `collisionstart` (new contacts) so the console is
   not flooded once the category is enabled.
+
+### Removed
+
+- The in-game Restart button and the `BaseGameScene.restart()` method were removed; starting a
+  fresh game is now done by going back to the menu and starting one.
 
 ### Changed
 

@@ -227,6 +227,18 @@ export class Player extends Phaser.GameObjects.Graphics {
         }
     }
 
+    updateTargetCircle() {
+        const shouldShow = !this.scene.playPaused && this.scene.playType === "Pass" &&
+            this.canReceivePass && this.teamHasPossession(this.scene) && !this.scene.scramble;
+
+        if (this.targetCircle) {
+            this.targetCircle.setVisible(shouldShow);
+            if (shouldShow) {
+                this.targetCircle.setPosition(this.x, this.y);
+            }
+        }
+    }
+
     updateVeer(dt, params) {
         if (!this.body || !this.active) return null;
 

@@ -676,6 +676,40 @@ describe('drag-aimed pass', () => {
     });
 });
 
+describe('scramble', () => {
+    // Regression for "fix pausing and starting play resetting qb scramble state": startPlay()
+    // used to force scramble = false, so pausing a scrambled play and hitting Start again
+    // silently un-scrambled the QB mid-run.
+    it('keeps the QB scrambling across a mid-play pause and resume', () => {
+        scene.changePlayType(); // Run -> Pass, QB now holds the ball
+        scene.startPlay();
+        scene.playStateManager.scramble();
+        expect(scene.scramble).toBe(true);
+
+        scene.pausePlay();
+        scene.startPlay();
+
+        expect(scene.scramble).toBe(true);
+    });
+
+    // The Scramble button only makes sense while the QB still holds the ball on a live Pass
+    // play: hidden on Run plays, and disabled before the snap and once the QB scrambles.
+    it('only offers the scramble button on a live Pass play', () => {
+        expect(scene.playType).toBe('Run');
+        expect(scene.scrambleButton.rect.visible).toBe(false);
+
+        scene.changePlayType(); // Run -> Pass
+        expect(scene.scrambleButton.rect.visible).toBe(true);
+        expect(scene.scrambleButton.rect.input.enabled).toBe(false); // pre-snap
+
+        scene.startPlay();
+        expect(scene.scrambleButton.rect.input.enabled).toBe(true); // live, QB still holds it
+
+        scene.playStateManager.scramble();
+        expect(scene.scrambleButton.rect.input.enabled).toBe(false); // already scrambling
+    });
+});
+
 describe('save on tackle', () => {
     beforeEach(() => {
         const store = new Map();

@@ -1,6 +1,6 @@
 import config from "./configLoader.js";
 import { log } from "./logger";
-import { getAllPlayers } from "./helpers";
+import { getAllPlayers, getOffensivePlayers } from "./helpers";
 
 const passingConfig = config.passing;
 
@@ -147,7 +147,7 @@ export class PassManager {
         // launches below or the carrier lookup fails and this bails out.
         this.aimGraphics.clear();
 
-        const carrier = getAllPlayers(game).find((p) => p.hasBall && p.teamHasPossession(game));
+        const carrier = getOffensivePlayers(game).find((p) => p.hasBall);
         if (!carrier) {
             this.aimTarget = null;
             return;
@@ -157,6 +157,9 @@ export class PassManager {
         const distance = Math.hypot(target.x - carrier.x, target.y - carrier.y);
 
         carrier.setHasBall(false);
+        if (this.game.updateScrambleButton) {
+            this.game.updateScrambleButton();
+        }
 
         this.flight = {
             originX: carrier.x,
@@ -242,6 +245,7 @@ export class PassManager {
         this.flight = null;
         this.ball.setVisible(false);
         this.aimGraphics.clear();
+        this.game.scramble = false;
     }
 
     ballInFlight() {

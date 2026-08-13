@@ -7,7 +7,7 @@ import { Scoreboard } from "../Scoreboard";
 import { FieldMarker } from "../FieldMarker";
 import config from "../configLoader.js";
 import { log } from "../logger";
-import { yardsToPixels, getAllPlayers, deselectAllPlayers } from "../helpers";
+import { yardsToPixels, getAllPlayers, getOffensivePlayers, deselectAllPlayers } from "../helpers";
 import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
 import { PlayRecorder } from "../PlayRecorder";
@@ -109,6 +109,7 @@ export class BaseGameScene extends Scene {
         this.down = 1;
         this.homeScore = 0;
         this.awayScore = 0;
+        this.scramble = false;
 
         if (data?.resume) loadGame(this);
     }
@@ -693,8 +694,9 @@ export class BaseGameScene extends Scene {
         this.nextPlayButton = new Button(this, nextX + 30, y + 25, 'Next Play', { width: buttonWidth + 55, height: buttonHeight });
         this.nextPlayButton.onClick(() => this.nextPlay());
 
-        this.resetGameButton = new Button(this, nextX + 220, y + 25, 'Restart', { width: buttonWidth + 30, height: buttonHeight });
-        this.resetGameButton.onClick(() => this.restart());
+        this.scrambleButton = new Button(this, nextX + 230, y + 25, 'Scramble', { width: buttonWidth + 60, height: buttonHeight });
+        this.scrambleButton.onClick(() => { this.playStateManager.scramble() });
+        this.updateScrambleButton();
 
         this.nextPlayButton.disable();
 
@@ -782,6 +784,11 @@ export class BaseGameScene extends Scene {
             if (player.targetCircle) {
                 player.targetCircle.setPosition(player.x, player.y);
             }
+
+            if (!this.playPaused) {
+                player.updateTargetCircle();
+            }
+
             if (player.updateDebugText) {
                 player.updateDebugText();
             }
@@ -835,11 +842,10 @@ export class BaseGameScene extends Scene {
                 const teamSign = player.team === "Home" ? 1 : -1;
                 let directionSign = player.teamHasPossession(this) ? endzoneDir : -endzoneDir;
                 if (this.playType === "Pass" && player.offensivePosition === "QB" &&
-                    player.teamHasPossession(this) && player.hasBall) {
+                    player.teamHasPossession(this) && player.hasBall && !this.scramble) {
                     directionSign = -.01 * endzoneDir;
                 }
                 player.applyMovementForce(dt, baseForceMagnitude, teamSign, directionSign, this.vibrationStrength);
-                this.updateTargetCircle(player);
             }
 
             this.passManager.advance(delta);
@@ -853,16 +859,17 @@ export class BaseGameScene extends Scene {
         // Override in subclass for mode-specific update logic
     }
 
-    updateTargetCircle(player) {
-        if (player.targetCircle && !this.playPaused && this.playType === "Pass" &&
-            player.canReceivePass &&
-            player.teamHasPossession(this)) {
-            player.targetCircle.setVisible(true);
-            player.targetCircle.setPosition(player.x, player.y);
-        }
-
-        if (!player.teamHasPossession(this) && player.targetCircle) {
-            player.targetCircle.setVisible(false);
+    // Scramble only makes sense while the QB still holds the ball on a Pass play: hidden on
+    // Run plays, and disabled once the QB scrambles or the ball leaves his hands.
+    updateScrambleButton() {
+        if (!this.scrambleButton) return;
+        const canScramble = this.playType === "Pass" && !this.scramble &&
+            getOffensivePlayers(this).some((player) => player.offensivePosition === "QB" && player.hasBall);
+        this.scrambleButton.setVisible(this.playType === "Pass");
+        if (canScramble && !this.playPausedBeforeSnap) {
+            this.scrambleButton.enable();
+        } else {
+            this.scrambleButton.disable();
         }
     }
 
@@ -917,15 +924,6 @@ export class BaseGameScene extends Scene {
                 if (barrier.body) barrier.body.isSensor = isSensor;
             });
         }
-    }
-
-    restart() {
-        // scene.restart() with no argument keeps whatever data the scene was originally
-        // started with (Phaser: "If no value is given it will not overwrite any previous data
-        // that may exist"). If this scene was entered via Resume, that's still {resume: true} --
-        // so restart would silently reload the old save instead of starting fresh. Pass an
-        // empty object to clear it.
-        this.scene.restart({});
     }
 
     returnToMenu() {
