@@ -28,12 +28,11 @@ export function getAllPlayers(game) {
 
 export function getBallCarrier(game) {
     let carrier = getOffensivePlayers(game).find(player => player.hasBall === true);
-    console.log("ball carier", carrier);
     return carrier; 
 }
 
 export function getBallCarrierX(game) {
-   return getBallCarrier(game).x;
+   return getBallCarrier(game)?.x;
 }
 
 export function deselectAllPlayers(game) {

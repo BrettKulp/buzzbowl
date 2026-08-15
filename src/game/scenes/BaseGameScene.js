@@ -123,6 +123,10 @@ export class BaseGameScene extends Scene {
     }
 
     create() {
+        this.ball = this.add.circle(0, 0, config.passing.ballRadiusPixels, config.colors.ball);
+        this.ball.setDepth(9998);
+        this.ball.setVisible(false);
+
         this.formationManager = new FormationManager(this);
         this.playStateManager = new PlayStateManager(this);
         this.playRecorder = new PlayRecorder(this);
@@ -143,6 +147,7 @@ export class BaseGameScene extends Scene {
         this.changeDefensiveFormation();
         this.changeformation();
         this.changeformation();
+
     }
 
     createField() {
@@ -746,7 +751,9 @@ export class BaseGameScene extends Scene {
     update(time, delta) {
         const allPlayers = getAllPlayers(this);
 
-        this.cameraManager.centerXonBallCarrier();
+
+        this.cameraManager.updateCameraPosition();
+
         if (!this.playStarted && this.playPausedBeforeSnap) {
             const losX = this.lineOfScrimmage.x;
             const halfSize = 30;
