@@ -12,6 +12,7 @@ import { FormationManager } from "../FormationManager";
 import { PlayStateManager } from "../PlayStateManager";
 import { PlayRecorder } from "../PlayRecorder";
 import { PassManager } from "../PassManager";
+import { CameraManager } from "../CameraManager.js";
 import { ReviewScrubber } from "../ReviewScrubber";
 import { saveGame, loadGame } from "../saveGame";
 import { loadTeamColors } from "../gameSettings.js";
@@ -63,8 +64,10 @@ export class BaseGameScene extends Scene {
         this.playStateManager = null;
         this.playRecorder = null;
         this.passManager = null;
+        this.cameraManager = null;
         this.reviewMode = false;
         this.activeResultPopup = null;
+
     }
 
     // Re-runs on every scene.start()/scene.restart() call, unlike the constructor —
@@ -110,6 +113,7 @@ export class BaseGameScene extends Scene {
         this.homeScore = 0;
         this.awayScore = 0;
         this.scramble = false;
+        this.camera = this.cameras.main;
 
         if (data?.resume) loadGame(this);
     }
@@ -123,6 +127,7 @@ export class BaseGameScene extends Scene {
         this.playStateManager = new PlayStateManager(this);
         this.playRecorder = new PlayRecorder(this);
         this.passManager = new PassManager(this);
+        this.cameraManager = new CameraManager(this);
 
         this.createField();
         this.createPlayers();
@@ -130,6 +135,7 @@ export class BaseGameScene extends Scene {
         this.createUI();
         this.createModeUI();
         this.downLabel = "Down";
+
 
         this.changePlayType();
         this.changePlayType();
@@ -736,9 +742,11 @@ export class BaseGameScene extends Scene {
         // Override in subclass to add mode-specific UI
     }
 
+    // update loop / game loop
     update(time, delta) {
         const allPlayers = getAllPlayers(this);
 
+        this.cameraManager.centerXonBallCarrier();
         if (!this.playStarted && this.playPausedBeforeSnap) {
             const losX = this.lineOfScrimmage.x;
             const halfSize = 30;
@@ -772,6 +780,7 @@ export class BaseGameScene extends Scene {
                     }
                 }
             }
+
         }
 
         const isPlaying = this.playStarted && !this.scored;
