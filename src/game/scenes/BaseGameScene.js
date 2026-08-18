@@ -113,7 +113,9 @@ export class BaseGameScene extends Scene {
         this.homeScore = 0;
         this.awayScore = 0;
         this.scramble = false;
+
         this.camera = this.cameras.main;
+        this.cameraCenteredOnBallCarrierPreSnap = false;
 
         if (data?.resume) loadGame(this);
     }

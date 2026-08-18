@@ -12,6 +12,7 @@ export class PlayStateManager {
 
         deselectAllPlayers(this.game);
         this.game.playStarted = true;
+        this.game.cameraCenteredOnBallCarrierPreSnap = false;
         this.game.playPaused = false;
         this.game.playPausedBeforeSnap = false;
         this.game.lineOfScrimmage.previousX = this.game.lineOfScrimmage.x;
@@ -169,6 +170,7 @@ export class PlayStateManager {
         this.game.startButton.enable();
         this.game.nextPlayButton.disable();
         this.game.playStarted = false;
+        this.game.cameraManager.updateCameraPosition(true);
     }
 
     handleTackle(ballCarrier, tackler, type) {

@@ -6,17 +6,26 @@ export class CameraManager {
         this.game = game;
     }
 
-    updateCameraPosition() {
-        if (!this.game.playStarted) {
-            // TODO need to ease to new camera position when the play starts instead of snapping
+    // TODO if it is a pass qb needs 30 yaards to pull back to do a full powered pass
+    // TODO make camera smoother when completing a pass or starting once player crossed the centerX
+    updateCameraPosition(overridePlayStartedCheck = false) {
+        if (!this.game.playStarted && !overridePlayStartedCheck && this.game.cameraCenteredOnBallCarrierPreSnap) {
             return;
         }
 
-        if (this.game.passManager.ballInFlight()) {
-            this.centerOnInFlightBallX();
-        } else {
-            this.centerOnBallCarrierX();
+        if ((this.game.offenseMovingRight && (getBallCarrierX(this.game) > this.game.camera.centerX)) || (!this.game.offenseMovingRight && (getBallCarrierX(this.game) < this.game.camera.centerX))) {
+
+            if (this.game.passManager.ballInFlight()) {
+                this.centerOnInFlightBallX();
+            } else {
+                this.centerOnBallCarrierX();
+            }
         }
+
+        if (overridePlayStartedCheck) {
+            this.game.cameraCenteredOnBallCarrierPreSnap = true;
+        }
+
         log("camera", () => `centered on x=${this.game.camera.midPoint.x}`);
     }
 
