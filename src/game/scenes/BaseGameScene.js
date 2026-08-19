@@ -170,7 +170,7 @@ export class BaseGameScene extends Scene {
             this.canvasWidth,
             this.scoreboardHeight,
             c.uiBackground
-        );
+        ).setScrollFactor(0);
 
         this.add.rectangle(
             this.canvasWidth / 2,
@@ -178,7 +178,7 @@ export class BaseGameScene extends Scene {
             this.canvasWidth,
             this.controlsHeight,
             c.uiBackground
-        );
+        ).setScrollFactor(0);
 
         this.matter.world.setBounds(
             this.margin,
@@ -335,6 +335,7 @@ export class BaseGameScene extends Scene {
             down: this.down,
             downX: 230
         });
+        this.scoreboard.setScrollFactor(0);
     }
 
     createPlayers() {
@@ -602,21 +603,24 @@ export class BaseGameScene extends Scene {
 
         // Formation controls
         new Button(this, 50, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changeformation());
+            .onClick(() => this.changeformation())
+            .setScrollFactor(0);
 
         this.formationText = this.add.text(
             120, y + 25, this.formation,
             { fontSize: "33px", fill: "#fff", fontStyle: "bold" }
-        ).setOrigin(0.5);
+        ).setOrigin(0.5).setScrollFactor(0);
 
         new Button(this, 190, y + 25, ">", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changeformation());
+            .onClick(() => this.changeformation())
+            .setScrollFactor(0);
 
         // Menu button
         const menuButtonWidth = 100;
         const menuButtonX = this.canvasWidth - 100;
         new Button(this, menuButtonX, 40, "Menu", { width: menuButtonWidth, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.returnToMenu());
+            .onClick(() => this.returnToMenu())
+            .setScrollFactor(0);
 
         // Review Play — toggles between reviewing the just-finished play and resuming
         const reviewButtonWidth = buttonWidth + 55;
@@ -629,30 +633,35 @@ export class BaseGameScene extends Scene {
             else this.enterReviewMode();
         });
         this.reviewButton.disable();
+        this.reviewButton.setScrollFactor(0);
 
         // Play type controls
         new Button(this, 280, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changePlayType());
+            .onClick(() => this.changePlayType())
+            .setScrollFactor(0);
 
         this.playTypeText = this.add.text(
             360, y + 25, this.playType,
             { fontSize: "33px", fill: "#fff", fontStyle: "bold" }
-        ).setOrigin(0.5);
+        ).setOrigin(0.5).setScrollFactor(0);
 
         new Button(this, 440, y + 25, ">", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changePlayType());
+            .onClick(() => this.changePlayType())
+            .setScrollFactor(0);
 
         // Defensive formation controls
         new Button(this, 580, y + 25, "<", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changeDefensiveFormation());
+            .onClick(() => this.changeDefensiveFormation())
+            .setScrollFactor(0);
 
         this.defensiveFormationText = this.add.text(
             657, y + 25, this.defensiveFormation,
             { fontSize: "33px", fill: "#fff", fontStyle: "bold" }
-        ).setOrigin(0.5);
+        ).setOrigin(0.5).setScrollFactor(0);
 
         new Button(this, 740, y + 25, ">", { width: 60, height: 60, labelStyle: arrowStyle })
-            .onClick(() => this.changeDefensiveFormation());
+            .onClick(() => this.changeDefensiveFormation())
+            .setScrollFactor(0);
 
         // Control buttons
         let nextX = 250 + playTypeSelectorX + playTypeSelectorWidth / 2 + padding + buttonWidth / 2;
@@ -663,6 +672,7 @@ export class BaseGameScene extends Scene {
                 this.startPlay();
             }
         });
+        this.startButton.setScrollFactor(0);
 
         // Popups
         this.incompletePopup = new Popup(this, nextX, this.canvasHeight / 2, 'Incomplete');
@@ -670,30 +680,35 @@ export class BaseGameScene extends Scene {
             this.nextPlay();
             this.hideUIPopups();
         });
+        this.incompletePopup.setScrollFactor(0);
 
         this.downPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Down!');
         this.downPopup.onClick(() => {
             this.nextPlay();
             this.hideUIPopups();
         });
+        this.downPopup.setScrollFactor(0);
 
         this.turnoverPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Turnover on downs!', { width: 340 });
         this.turnoverPopup.onClick(() => {
             this.nextPlay();
             this.hideUIPopups();
         });
+        this.turnoverPopup.setScrollFactor(0);
 
         this.interceptionPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Intercepted!', { width: 280 });
         this.interceptionPopup.onClick(() => {
             this.nextPlay();
             this.hideUIPopups();
         });
+        this.interceptionPopup.setScrollFactor(0);
 
         this.touchdownPopup = new Popup(this, nextX - 120, this.canvasHeight / 2, 'Touchdown');
         this.touchdownPopup.onClick(() => {
             this.nextPlay();
             this.hideUIPopups();
         });
+        this.touchdownPopup.setScrollFactor(0);
 
         nextX += buttonWidth + padding;
         this.pauseButton = new Button(this, nextX, y + 25, 'Pause', { width: buttonWidth, height: buttonHeight });
@@ -702,13 +717,16 @@ export class BaseGameScene extends Scene {
                 this.pausePlay();
             }
         });
+        this.pauseButton.setScrollFactor(0);
 
         nextX += buttonWidth + padding;
         this.nextPlayButton = new Button(this, nextX + 30, y + 25, 'Next Play', { width: buttonWidth + 55, height: buttonHeight });
         this.nextPlayButton.onClick(() => this.nextPlay());
+        this.nextPlayButton.setScrollFactor(0);
 
         this.scrambleButton = new Button(this, nextX + 230, y + 25, 'Scramble', { width: buttonWidth + 60, height: buttonHeight });
         this.scrambleButton.onClick(() => { this.playStateManager.scramble() });
+        this.scrambleButton.setScrollFactor(0);
         this.updateScrambleButton();
 
         this.nextPlayButton.disable();
@@ -719,6 +737,7 @@ export class BaseGameScene extends Scene {
         const reviewScrubberY = this.fieldY + 40;
         this.reviewScrubber = new ReviewScrubber(this, reviewScrubberX, reviewScrubberY);
         this.reviewScrubber.onScrub = (frameIndex) => this.playRecorder.applyFrame(frameIndex);
+        this.reviewScrubber.setScrollFactor(0);
     }
 
     enterReviewMode() {

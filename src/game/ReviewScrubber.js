@@ -43,6 +43,10 @@ function createStepButton(scene, x, y, label, onClick) {
             graphics.setDepth(depth);
             text.setDepth(depth);
         },
+        setScrollFactor(value) {
+            graphics.setScrollFactor(value);
+            text.setScrollFactor(value);
+        },
     };
 }
 
@@ -93,6 +97,13 @@ export class ReviewScrubber {
         this.handle.setVisible(visible);
         this.stepBackButton.setVisible(visible);
         this.stepForwardButton.setVisible(visible);
+    }
+
+    setScrollFactor(value) {
+        this.track.setScrollFactor(value);
+        this.handle.setScrollFactor(value);
+        this.stepBackButton.setScrollFactor(value);
+        this.stepForwardButton.setScrollFactor(value);
     }
 
     step(direction) {

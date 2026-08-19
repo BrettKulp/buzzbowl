@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import { getBallCarrierX } from "./helpers";
 import { log } from "./logger";
 
@@ -6,52 +7,50 @@ export class CameraManager {
         this.game = game;
     }
 
-    // TODO if it is a pass qb needs 30 yaards to pull back to do a full powered pass
-    // TODO make camera smoother when completing a pass or starting once player crossed the centerX
     updateCameraPosition(overridePlayStartedCheck = false) {
-        if (!this.game.playStarted && !overridePlayStartedCheck && this.game.cameraCenteredOnBallCarrierPreSnap) {
+        if (this.game.playPaused && !overridePlayStartedCheck) {
             return;
         }
 
-        if ((this.game.offenseMovingRight && (getBallCarrierX(this.game) > this.game.camera.centerX)) || (!this.game.offenseMovingRight && (getBallCarrierX(this.game) < this.game.camera.centerX))) {
-
-            if (this.game.passManager.ballInFlight()) {
-                this.centerOnInFlightBallX();
-            } else {
-                this.centerOnBallCarrierX();
-            }
-        }
+        const ballCarrierX = getBallCarrierX(this.game);
 
         if (overridePlayStartedCheck) {
+            this.instantCenterOn(ballCarrierX);
             this.game.cameraCenteredOnBallCarrierPreSnap = true;
+            return;
         }
+
+        if (!this.game.playStarted && this.game.cameraCenteredOnBallCarrierPreSnap) {
+            return;
+        }
+
+        const targetX = this.game.passManager.ballInFlight()
+            ? this.game.passManager.ball.x
+            : ballCarrierX;
+
+        this.setCameraPosition(targetX);
 
         log("camera", () => `centered on x=${this.game.camera.midPoint.x}`);
     }
 
-    centerOnBallCarrierX() {
-        let ballCarrierX = getBallCarrierX(this.game);
+    instantCenterOn(x, _y = 450) {
+        if (!x) return;
 
-        if (!ballCarrierX) 
-            return;
-
-        this.setCameraPosition(ballCarrierX)
-    }
-
-    centerOnInFlightBallX() {
-        this.setCameraPosition(this.game.passManager.ball.x);
+        const clampedX = Phaser.Math.Clamp(x, 600, 1000);
+        this.game.camera.centerOn(clampedX, _y);
     }
 
     setCameraPosition(x, _y = 450) {
-        let newX = x;
-        let newY = _y;
-        if (x < 600) {
-            newX = 600;
-        }
+        if (!x) return;
 
-        if (x > 1000) {
-            newX = 1000;
-        }
+        const targetX = Phaser.Math.Clamp(x, 600, 1000);
+        const targetY = _y;
+        const lerpFactor = 0.05;
+        const currentX = this.game.camera.scrollX + this.game.camera.width / 2;
+        const currentY = this.game.camera.scrollY + this.game.camera.height / 2;
+
+        const newX = Phaser.Math.Linear(currentX, targetX, lerpFactor);
+        const newY = Phaser.Math.Linear(currentY, targetY, lerpFactor);
 
         this.game.camera.centerOn(newX, newY);
     }

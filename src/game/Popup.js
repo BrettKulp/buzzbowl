@@ -55,4 +55,12 @@ export class Popup {
         this.button.on('pointerdown', fn);
         return this;
     }
+
+    setScrollFactor(value) {
+        this.bgRect.setScrollFactor(value);
+        this.labelText.setScrollFactor(value);
+        this.button.setScrollFactor(value);
+        this.buttonText.setScrollFactor(value);
+        return this;
+    }
 }
