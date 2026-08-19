@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Camera now smoothly lerps toward the ball carrier instead of snapping instantly. The camera
+  only follows during live play (not while paused), does an instant snap on Next Play, and
+  clamps to the field bounds (600–1000px). In-flight passes track the ball instead of the
+  carrier. Camera logic was extracted into `src/game/CameraManager.js`.
+- All in-game UI (scoreboard, buttons, popups, formation labels, review scrubber, quarter/clock
+  text) now uses `setScrollFactor(0)` so elements stay fixed to the viewport when the camera
+  scrolls. Button, Popup, Scoreboard, and ReviewScrubber each gained a `setScrollFactor()`
+  method that applies to all their child game objects.
+
+### Added
+
+- `tests/unit/CameraManager.test.js` covering the camera update lifecycle: skip when paused,
+  instant snap on override, skip when already centered pre-snap, lerp during live play, and
+  in-flight ball tracking.
+
+### Changed
+
 - The receiver target-circle logic moved out of `BaseGameScene.updateTargetCircle()` into a
   shared `Player.updateTargetCircle()` method driven by one show/hide decision (Pass play, not
   paused, receiver eligible, on the possessing team, QB not scrambling). It now runs every

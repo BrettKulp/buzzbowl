@@ -94,6 +94,7 @@ export function makeFakeGame(overrides = {}) {
         scrambleButton: { enable: vi.fn(), disable: vi.fn(), setVisible: vi.fn() },
         updateScrambleButton: vi.fn(),
         scoreboard: { updateScore: vi.fn(), updateDown: vi.fn() },
+        cameraManager: { updateCameraPosition: vi.fn() },
 
         matter: { body: { setPosition: vi.fn(), setAngle: vi.fn() } },
 
