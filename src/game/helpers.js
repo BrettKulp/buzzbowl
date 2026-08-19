@@ -26,6 +26,15 @@ export function getAllPlayers(game) {
     return [...getHomePlayers(game), ...getAwayPlayers(game)];
 }
 
+export function getBallCarrier(game) {
+    let carrier = getOffensivePlayers(game).find(player => player.hasBall === true);
+    return carrier; 
+}
+
+export function getBallCarrierX(game) {
+   return getBallCarrier(game)?.x;
+}
+
 export function deselectAllPlayers(game) {
     getAllPlayers(game).forEach(player => player.deselect());
 }

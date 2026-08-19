@@ -3,12 +3,13 @@
     "enabled": false,
     "categories": {
       "collision": false,
-      "collisionWithBallCarrier": true,
-      "play": true,
-      "stuck": true,
-      "player": true,
-      "los": true,
-      "pass": true
+      "collisionWithBallCarrier": false,
+      "play": false,
+      "stuck": false,
+      "player": false,
+      "los": false,
+      "pass": false,
+      "camera": true
     }
   },
   "colors": {

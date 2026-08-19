@@ -52,9 +52,7 @@ export class PassManager {
     constructor(game) {
         this.game = game;
 
-        this.ball = game.add.circle(0, 0, passingConfig.ballRadiusPixels, config.colors.ball);
-        this.ball.setDepth(9998);
-        this.ball.setVisible(false);
+        this.ball = game.ball;
 
         this.aimGraphics = game.add.graphics();
         this.aimGraphics.setDepth(9998);

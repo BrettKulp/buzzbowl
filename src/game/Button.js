@@ -67,6 +67,12 @@ export class Button {
         return this;
     }
 
+    setScrollFactor(value) {
+        this.rect.setScrollFactor(value);
+        this.text.setScrollFactor(value);
+        return this;
+    }
+
     destroy() {
         this.rect.destroy();
         this.text.destroy();

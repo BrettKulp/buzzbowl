@@ -45,13 +45,13 @@ export class StandardGameScene extends BaseGameScene {
             this.canvasWidth / 2, 25,
             `Q${this.quarter}`,
             { fontSize: "30px", fill: "#fff", fontStyle: "bold" }
-        ).setOrigin(0.5);
+        ).setOrigin(0.5).setScrollFactor(0);
 
         this.clockText = this.add.text(
             this.canvasWidth / 2, 60,
             this.quarterMode === "time" ? this.formatTime(this.gameClock) : this.formatPlayCount(),
             { fontSize: "40px", fill: "#fff", fontStyle: "bold" }
-        ).setOrigin(0.5);
+        ).setOrigin(0.5).setScrollFactor(0);
     }
 
     formatPlayCount() {
